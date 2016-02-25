@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -80,6 +81,28 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 			}
 
 			Assert.AreEqual(0, new FileInfo(_storageFilePath).Length);
+		}
+
+		[TestMethod]
+		public void Get_Test() {
+			using(var target = new FileStorage(_storageFilePath)) {
+				var list = new List<KeyValuePair<IndexData, byte[]>>();
+				for(var i = 0; i < 10; i++) {
+					var data = Guid.NewGuid().ToByteArray();
+					var indexData = target.Append(new MemoryStream(data));
+					list.Add(new KeyValuePair<IndexData, byte[]>(indexData, data));
+				}
+
+				foreach(var item in list.OrderBy(x => Guid.NewGuid())) {
+					using(var stream = target.Get(item.Key)) {
+						var ms = new MemoryStream();
+						stream.CopyTo(ms);
+						var buffer = ms.ToArray();
+
+						Assert.IsTrue(item.Value.SequenceEqual(buffer));
+					}
+				}
+			}
 		}
 
 		[SuppressMessage("ReSharper", "UnusedParameter.Local")]

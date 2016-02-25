@@ -22,6 +22,7 @@ namespace Zylab.Interview.BinStorage {
 
 		public Stream Get(string key) {
 			var indexData = _index.Get(key);
+
 			return _storage.Get(indexData);
 		}
 

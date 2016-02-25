@@ -32,6 +32,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 
 			var prevCount = count;
 			var prevBuffer = Interlocked.Exchange(ref buffer, new byte[_bufferSize]);
+			_hashAlgorithm.Initialize();
 
 			do {
 				_writer.Write(prevBuffer, 0, prevCount);
@@ -58,7 +59,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 		public Stream Get(IndexData indexData) {
 			_reader.Seek(indexData.Offset, SeekOrigin.Begin);
 
-			return new BufferedStream(_reader);
+			return new BufferedStream(_reader, _bufferSize);
 		}
 
 		public void Dispose() {
