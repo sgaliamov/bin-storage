@@ -17,7 +17,7 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 		public void TestInitialize() {
 			_indexFilePath = Path.GetTempFileName();
 			File.Delete(_indexFilePath);
-			_timeout = TimeSpan.FromSeconds(20);
+			_timeout = TimeSpan.FromSeconds(10);
 		}
 
 		[TestCleanup]
