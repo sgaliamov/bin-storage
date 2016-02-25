@@ -71,12 +71,6 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 			}
 		}
 
-		private static void AreEqual(IndexData expected, IndexData actual) {
-			Assert.AreEqual(expected.Size, actual.Size);
-			Assert.AreEqual(expected.Offset, actual.Offset);
-			Assert.IsTrue(expected.Md5Hash.SequenceEqual(actual.Md5Hash));
-		}
-
 		[TestMethod]
 		public void GetUnknown_Test() {
 			var key = Guid.NewGuid().ToString();
@@ -117,8 +111,8 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 				x => Guid.NewGuid().ToString(),
 				i => new IndexData {
 					Md5Hash = Guid.NewGuid().ToByteArray(),
-					Offset = (ulong)i,
-					Size = (ulong)(i + 1)
+					Offset = i,
+					Size = i + 1
 				});
 
 			using(var target = new RedBlackTreeIndex(_indexFilePath, _timeout)) {
@@ -169,6 +163,12 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 					AreEqual(item.Value, actual);
 				}
 			}
+		}
+
+		private static void AreEqual(IndexData expected, IndexData actual) {
+			Assert.AreEqual(expected.Size, actual.Size);
+			Assert.AreEqual(expected.Offset, actual.Offset);
+			Assert.IsTrue(expected.Md5Hash.SequenceEqual(actual.Md5Hash));
 		}
 	}
 
