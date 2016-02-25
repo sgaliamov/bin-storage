@@ -1,30 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
+﻿using System.IO;
+using Zylab.Interview.BinStorage.Index;
+using Zylab.Interview.BinStorage.Storage;
 
 namespace Zylab.Interview.BinStorage {
-    public class BinaryStorage : IBinaryStorage {
 
-        public BinaryStorage(StorageConfiguration configuration) {
+	public class BinaryStorage : IBinaryStorage {
+		private readonly IIndex _index;
+		private readonly IStorage _storage;
 
-        }
+		public BinaryStorage(StorageConfiguration configuration) {
+			_index = new RedBlackTreeIndex(
+				Path.Combine(configuration.WorkingFolder, configuration.IndexFileName),
+				configuration.IndexTimeout);
+			_storage = new FileStorage(Path.Combine(configuration.WorkingFolder, configuration.StorageFileName));
+		}
 
-        public void Add(string key, Stream data) {
-            throw new NotImplementedException();
-        }
+		public void Add(string key, Stream data) {
+			var indexData = _storage.Append(data);
+			_index.Add(key, indexData);
+		}
 
-        public Stream Get(string key) {
-            throw new NotImplementedException();
-        }
+		public Stream Get(string key) {
+			var indexData = _index.Get(key);
+			return _storage.Get(indexData);
+		}
 
-        public bool Contains(string key) {
-            throw new NotImplementedException();
-        }
+		public bool Contains(string key) {
+			return _index.Contains(key);
+		}
 
-        public void Dispose() {
-            throw new NotImplementedException();
-        }
-    }
+		public void Dispose() {
+			_storage.Dispose();
+			_index.Dispose();
+		}
+	}
+
 }

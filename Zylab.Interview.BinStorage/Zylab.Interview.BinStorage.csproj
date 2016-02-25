@@ -62,8 +62,13 @@
   <ItemGroup>
     <Compile Include="BinaryStorage.cs" />
     <Compile Include="IBinaryStorage.cs" />
+    <Compile Include="Index\RedBlackTreeIndex.cs" />
+    <Compile Include="Index\IIndex.cs" />
+    <Compile Include="Index\IndexData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StorageConfiguration.cs" />
+    <Compile Include="Storage\IStorage.cs" />
+    <Compile Include="Storage\FileStorage.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
