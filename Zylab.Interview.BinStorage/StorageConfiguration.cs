@@ -1,15 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Zylab.Interview.BinStorage {
-    public class StorageConfiguration {
 
-        /// <summary>
-        /// Folder where implementation should store Index and Storage File
-        /// </summary>
-        public string WorkingFolder { get; set; }
-    }
+	public class StorageConfiguration {
+		public StorageConfiguration() {
+			StorageFileName = "storage.bin";
+			IndexTimeout = TimeSpan.FromSeconds(90);
+		}
+
+		/// <summary>
+		///     Folder where implementation should store Index and FileStorage File
+		/// </summary>
+		public string WorkingFolder { get; set; }
+
+		public string StorageFileName { get; set; }
+
+		public string IndexFileName { get; set; }
+
+		public TimeSpan IndexTimeout { get; set; }
+	}
 
 }
