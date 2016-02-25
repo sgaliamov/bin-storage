@@ -5,6 +5,7 @@ namespace Zylab.Interview.BinStorage {
 	public class StorageConfiguration {
 		public StorageConfiguration() {
 			StorageFileName = "storage.bin";
+			IndexFileName = "index.bin";
 			IndexTimeout = TimeSpan.FromSeconds(90);
 		}
 
