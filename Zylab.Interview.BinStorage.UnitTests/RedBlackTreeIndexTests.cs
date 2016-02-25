@@ -29,8 +29,8 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 		public void Add_and_Contains_Test() {
 			var key = Guid.NewGuid().ToString();
 			var data = new IndexData {
-				Start = 1,
-				End = 2,
+				Offset = 1,
+				Size = 2,
 				Md5Hash = Guid.NewGuid().ToByteArray()
 			};
 
@@ -51,8 +51,8 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 		public void Get_Test() {
 			var key = Guid.NewGuid().ToString();
 			var data = new IndexData {
-				Start = 1,
-				End = 2,
+				Offset = 1,
+				Size = 2,
 				Md5Hash = Guid.NewGuid().ToByteArray()
 			};
 
@@ -72,8 +72,8 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 		}
 
 		private static void AreEqual(IndexData expected, IndexData actual) {
-			Assert.AreEqual(expected.End, actual.End);
-			Assert.AreEqual(expected.Start, actual.Start);
+			Assert.AreEqual(expected.Size, actual.Size);
+			Assert.AreEqual(expected.Offset, actual.Offset);
 			Assert.IsTrue(expected.Md5Hash.SequenceEqual(actual.Md5Hash));
 		}
 
@@ -81,8 +81,8 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 		public void GetUnknown_Test() {
 			var key = Guid.NewGuid().ToString();
 			var data = new IndexData {
-				Start = 1,
-				End = 2,
+				Offset = 1,
+				Size = 2,
 				Md5Hash = Guid.NewGuid().ToByteArray()
 			};
 
@@ -117,8 +117,8 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 				x => Guid.NewGuid().ToString(),
 				i => new IndexData {
 					Md5Hash = Guid.NewGuid().ToByteArray(),
-					Start = (ulong)i,
-					End = (ulong)(i + 1)
+					Offset = (ulong)i,
+					Size = (ulong)(i + 1)
 				});
 
 			using(var target = new RedBlackTreeIndex(_indexFilePath, _timeout)) {

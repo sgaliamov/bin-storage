@@ -57,6 +57,7 @@ namespace Zylab.Interview.BinStorage.Index {
 		}
 
 		public void Dispose() {
+			// todo: https://msdn.microsoft.com/en-us/library/system.idisposable(v=vs.110).aspx
 			var formatter = new BinaryFormatter();
 			using(var stream = new FileStream(_indexFilePath, FileMode.Create, FileAccess.Write, FileShare.None)) {
 				formatter.Serialize(stream, _tree);

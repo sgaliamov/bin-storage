@@ -30,6 +30,7 @@ namespace Zylab.Interview.BinStorage {
 		}
 
 		public void Dispose() {
+			// todo: https://msdn.microsoft.com/en-us/library/system.idisposable(v=vs.110).aspx
 			_storage.Dispose();
 			_index.Dispose();
 		}
