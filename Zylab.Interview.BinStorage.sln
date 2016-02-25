@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zylab.Interview.BinStorage", "Zylab.Interview.BinStorage\Zylab.Interview.BinStorage.csproj", "{D4C5F6A9-7989-40EA-8BBC-07B6E0FD8A47}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zylab.Interview.BinStorage.TestApp", "Zylab.Interview.BinStorage.TestApp\Zylab.Interview.BinStorage.TestApp.csproj", "{B24D27D5-F06E-4405-8CEF-27380A7FB513}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Release|Mixed Platforms = Release|Mixed Platforms
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D4C5F6A9-7989-40EA-8BBC-07B6E0FD8A47}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D4C5F6A9-7989-40EA-8BBC-07B6E0FD8A47}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D4C5F6A9-7989-40EA-8BBC-07B6E0FD8A47}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{D4C5F6A9-7989-40EA-8BBC-07B6E0FD8A47}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{B24D27D5-F06E-4405-8CEF-27380A7FB513}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{B24D27D5-F06E-4405-8CEF-27380A7FB513}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{B24D27D5-F06E-4405-8CEF-27380A7FB513}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{B24D27D5-F06E-4405-8CEF-27380A7FB513}.Release|Mixed Platforms.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
