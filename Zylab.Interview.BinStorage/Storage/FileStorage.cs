@@ -36,6 +36,8 @@ namespace Zylab.Interview.BinStorage.Storage {
 				Offset = _position
 			};
 
+			// todo: if input stream is seekable, calculate new _position to allow other threads write new data,
+			// todo: write nonseekable input stream to separate queue and join it when finish
 			var buffer = new byte[_readBufferSize];
 			var count = data.Read(buffer, 0, _readBufferSize);
 			if(count == 0) {
@@ -83,7 +85,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 				_capacity <<= 1;
 				InitFile();
 			}
-
+			
 			_writer.Write(buffer, 0, count);
 			_position += count;
 		}
@@ -107,7 +109,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 				_position = PositionHolderSize;
 				_positionHolder.Write(0, _position);
 			}
-			_writer = _mappedFile.CreateViewStream(_position, _capacity - _position);
+			_writer = _mappedFile.CreateViewStream(_position, _capacity - _position); // todo: read by parts
 		}
 
 		private long ReadPosition(out long fileLength) {
