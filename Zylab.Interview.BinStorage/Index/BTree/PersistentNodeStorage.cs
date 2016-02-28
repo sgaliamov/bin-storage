@@ -20,11 +20,11 @@
 //				MemoryMappedFileAccess.ReadWrite);
 //		}
 
-//		public Node Create(long key, int degree) {
+//		public Node NewKey(long key, int degree) {
 //			throw new NotImplementedException();
 //		}
 
-//		public Node Get(long key) {
+//		public Node GetNode(long key) {
 //			throw new NotImplementedException();
 //		}
 //	}

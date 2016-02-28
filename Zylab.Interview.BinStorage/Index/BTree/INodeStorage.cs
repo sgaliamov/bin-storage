@@ -3,9 +3,9 @@
 namespace Zylab.Interview.BinStorage.Index.BTree {
 
 	public interface INodeStorage : IDisposable {
-		Node Create(long key, int degree);
-		Node Get(long key);
-		//void Update(long  Node node)
+		IndexDataKey NewKey(string key, IndexData data);
+		Node NewNode(int t);
+		Node GetNode(string key);
 	}
 
 }
