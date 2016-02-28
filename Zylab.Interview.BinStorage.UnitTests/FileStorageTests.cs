@@ -111,6 +111,34 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 		}
 
 		[TestMethod]
+		public void Appent_BigData_Test() {
+			var bigData = Guid.NewGuid().ToByteArray();
+			const int capacity = SizeOfGuid / 4;
+
+			using(var target = new FileStorage(_storageFilePath, capacity)) {
+				target.Append(new MemoryStream(bigData));
+			}
+
+			using(var target = new FileStorage(_storageFilePath, 0))
+			using(var stream = target.Get(
+				new IndexData {
+					Offset = PositionHolderSize,
+					Md5Hash = null,
+					Size = SizeOfGuid
+				})) {
+				var ms = new MemoryStream();
+				stream.CopyTo(ms);
+
+				Assert.IsTrue(bigData.SequenceEqual(ms.ToArray()));
+			}
+
+			using(var file = new FileStream(_storageFilePath, FileMode.Open)) {
+				var position = ReadAndCheckPosition(file, SizeOfGuid);
+				Assert.AreEqual(position, file.Length);
+			}
+		}
+
+		[TestMethod]
 		public void Append_Empty_Test() {
 			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
 				var indexData = target.Append(new MemoryStream());
@@ -185,20 +213,20 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 
 		[SuppressMessage("ReSharper", "UnusedParameter.Local")]
 		private static void Check(
-			byte[] inputData,
+			byte[] expectedData,
 			int expectedOffset,
 			byte[] actualData,
-			IndexData indexData,
-			long position) {
-			Assert.IsTrue(inputData.SequenceEqual(actualData));
-			Assert.AreEqual(position, indexData.Offset + indexData.Size);
+			IndexData actualIndexData,
+			long actualPosition) {
+			Assert.IsTrue(expectedData.SequenceEqual(actualData));
+			Assert.AreEqual(actualPosition, actualIndexData.Offset + actualIndexData.Size);
 
 			using(var md5 = MD5.Create()) {
-				var inputStream = new MemoryStream(inputData);
+				var inputStream = new MemoryStream(expectedData);
 				var hash = md5.ComputeHash(inputStream);
-				Assert.AreEqual(expectedOffset, indexData.Offset);
-				Assert.AreEqual(inputData.Length, indexData.Size);
-				Assert.IsTrue(hash.SequenceEqual(indexData.Md5Hash));
+				Assert.AreEqual(expectedOffset, actualIndexData.Offset);
+				Assert.AreEqual(expectedData.Length, actualIndexData.Size);
+				Assert.IsTrue(hash.SequenceEqual(actualIndexData.Md5Hash));
 			}
 		}
 
