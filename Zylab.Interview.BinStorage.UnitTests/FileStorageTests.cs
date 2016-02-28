@@ -93,14 +93,16 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 			using(var target = new FileStorage(_storageFilePath, capacity)) {
 				var offset = PositionHolderSize;
 				foreach(var item in data) {
-					var stream = target.Get(
+					MemoryStream ms;
+					using(var stream = target.Get(
 						new IndexData {
 							Offset = offset,
 							Md5Hash = null,
 							Size = item.Length
-						});
-					var ms = new MemoryStream();
-					stream.CopyTo(ms);
+						})) {
+						ms = new MemoryStream();
+						stream.CopyTo(ms);
+					}
 					offset += SizeOfGuid;
 
 					Assert.IsTrue(item.SequenceEqual(ms.ToArray()));

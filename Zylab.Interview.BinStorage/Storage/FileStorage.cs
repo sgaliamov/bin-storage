@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Security.Cryptography;
 using System.Threading;
@@ -11,27 +12,25 @@ namespace Zylab.Interview.BinStorage.Storage {
 		private const long DefaultCapacity = 0x100000; // 256 MB
 		private const int PositionHolderSize = sizeof(long);
 
-		private readonly int _readBufferSize;
 		private readonly HashAlgorithm _hashAlgorithm;
-		private readonly MemoryMappedFile _mappedFile;
-		private readonly MemoryMappedViewAccessor _positionHolder;
-		private long _position;
+		private readonly int _readBufferSize;
+		private readonly string _storageFilePath;
 		private long _capacity;
+		private MemoryMappedFile _mappedFile;
+		private long _position;
+		private MemoryMappedViewAccessor _positionHolder;
+		private MemoryMappedViewStream _writer;
 
-		public FileStorage(string storageFilePath, long capacity = DefaultCapacity, int readBufferSize = DefaultReadBufferSize) {
-			_capacity = capacity;
+		public FileStorage(
+			string storageFilePath,
+			long capacity = DefaultCapacity,
+			int readBufferSize = DefaultReadBufferSize) {
+			_storageFilePath = storageFilePath;
 			_readBufferSize = readBufferSize;
-			_mappedFile = MemoryMappedFile.CreateFromFile(
-				storageFilePath,
-				FileMode.OpenOrCreate,
-				null,
-				capacity + PositionHolderSize,
-				MemoryMappedFileAccess.ReadWrite);
-
-			_positionHolder = _mappedFile.CreateViewAccessor(0, PositionHolderSize);
-			_position = InitPosition(_positionHolder);
-
 			_hashAlgorithm = MD5.Create();
+			_capacity = capacity + PositionHolderSize;
+
+			InitFile();
 		}
 
 		public IndexData Append(Stream data) {
@@ -48,24 +47,20 @@ namespace Zylab.Interview.BinStorage.Storage {
 			var prevCount = count;
 			var prevBuffer = Interlocked.Exchange(ref buffer, new byte[_readBufferSize]);
 			_hashAlgorithm.Initialize();
-			using(var writer = _mappedFile.CreateViewStream(_position, 0)) {
-				do {
-					writer.Write(prevBuffer, 0, prevCount);
-					_position += prevCount;
+			do {
+				Write(prevBuffer, prevCount);
 
-					count = data.Read(buffer, 0, _readBufferSize);
-					if(count > 0) {
-						_hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
-						prevCount = count;
-						prevBuffer = Interlocked.Exchange(ref buffer, prevBuffer);
-					}
-					else {
-						_hashAlgorithm.TransformFinalBlock(prevBuffer, 0, prevCount);
-						break;
-					}
-				} while(true);
-				writer.Flush();
-			}
+				count = data.Read(buffer, 0, _readBufferSize);
+				if(count > 0) {
+					_hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
+					prevCount = count;
+					prevBuffer = Interlocked.Exchange(ref buffer, prevBuffer);
+				}
+				else {
+					_hashAlgorithm.TransformFinalBlock(prevBuffer, 0, prevCount);
+					break;
+				}
+			} while(true);
 			_positionHolder.Write(0, _position);
 
 			indexData.Md5Hash = _hashAlgorithm.Hash;
@@ -80,19 +75,57 @@ namespace Zylab.Interview.BinStorage.Storage {
 
 		public void Dispose() {
 			// todo: https://msdn.microsoft.com/en-us/library/system.idisposable(v=vs.110).aspx
-			_positionHolder.Dispose();
-			_mappedFile.Dispose();
+			DisposeFile();
 			_hashAlgorithm.Dispose();
 		}
 
-		private static long InitPosition(UnmanagedMemoryAccessor viewAccessor) {
-			var position = viewAccessor.ReadInt64(0);
-			if(position != 0) return position;
+		private void Write(byte[] buffer, int count) {
+			if(_position + count > _capacity) {
+				DisposeFile();
+				_capacity <<= 1;
+				InitFile();
+			}
 
-			position = PositionHolderSize;
-			viewAccessor.Write(0, position);
+			_writer.Write(buffer, 0, count);
+			_position += count;
+		}
 
-			return position;
+		private void InitFile() {
+			long fileLength;
+			_position = ReadPosition(out fileLength);
+			if(_capacity < fileLength) {
+				_capacity = fileLength;
+			}
+
+			_mappedFile = MemoryMappedFile.CreateFromFile(
+				_storageFilePath,
+				FileMode.OpenOrCreate,
+				null,
+				_capacity,
+				MemoryMappedFileAccess.ReadWrite);
+
+			_positionHolder = _mappedFile.CreateViewAccessor(0, PositionHolderSize);
+			if(_position == 0) {
+				_position = PositionHolderSize;
+				_positionHolder.Write(0, _position);
+			}
+			_writer = _mappedFile.CreateViewStream(_position, 0);
+		}
+
+		private long ReadPosition(out long fileLength) {
+			using(var file = File.Open(_storageFilePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.None)) {
+				var buffer = new byte[PositionHolderSize];
+				file.Read(buffer, 0, PositionHolderSize);
+				fileLength = file.Length;
+
+				return BitConverter.ToInt64(buffer, 0);
+			}
+		}
+
+		private void DisposeFile() {
+			_writer.Dispose();
+			_positionHolder.Dispose();
+			_mappedFile.Dispose();
 		}
 	}
 
