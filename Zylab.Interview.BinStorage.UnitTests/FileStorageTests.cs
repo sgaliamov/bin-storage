@@ -16,6 +16,7 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 	[TestClass]
 	public class FileStorageTests {
 		private const int TestCapacity = 0x400; // 1KB
+		private const int PositionHolderSize = sizeof(long);
 		private const int SizeOfGuid = 16;
 		private string _storageFilePath;
 
@@ -47,7 +48,7 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 				var actual = new byte[SizeOfGuid];
 				file.Read(actual, 0, SizeOfGuid);
 
-				Check(data, sizeof(long), actual, indexData, position);
+				Check(data, PositionHolderSize, actual, indexData, position);
 			}
 		}
 
@@ -71,16 +72,40 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 				var position = ReadAndCheckPosition(file, SizeOfGuid * 3);
 
 				var actual = new byte[SizeOfGuid];
-				file.Position = SizeOfGuid * 2 + sizeof(long);
+				file.Position = SizeOfGuid * 2 + PositionHolderSize;
 				file.Read(actual, 0, actual.Length);
 
-				Check(data, sizeof(long) + SizeOfGuid * 2, actual, indexData, position);
+				Check(data, PositionHolderSize + SizeOfGuid * 2, actual, indexData, position);
 			}
 		}
 
 		[TestMethod]
 		public void Appent_OverCapacity_Test() {
-			Assert.Fail();
+			var data = new[] { Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray() };
+			const int capacity = SizeOfGuid + SizeOfGuid / 2;
+
+			using(var target = new FileStorage(_storageFilePath, capacity)) {
+				foreach(var item in data) {
+					target.Append(new MemoryStream(item));
+				}
+			}
+
+			using(var target = new FileStorage(_storageFilePath, capacity)) {
+				var offset = PositionHolderSize;
+				foreach(var item in data) {
+					var stream = target.Get(
+						new IndexData {
+							Offset = offset,
+							Md5Hash = null,
+							Size = item.Length
+						});
+					var ms = new MemoryStream();
+					stream.CopyTo(ms);
+					offset += SizeOfGuid;
+
+					Assert.IsTrue(item.SequenceEqual(ms.ToArray()));
+				}
+			}
 		}
 
 		[TestMethod]
@@ -93,7 +118,7 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 				ReadAndCheckPosition(file, 0);
 			}
 
-			Assert.AreEqual(TestCapacity, new FileInfo(_storageFilePath).Length);
+			Assert.AreEqual(TestCapacity + PositionHolderSize, new FileInfo(_storageFilePath).Length);
 		}
 
 		[TestMethod]
@@ -177,10 +202,10 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 
 		private static long ReadAndCheckPosition(Stream stream, int dataLength) {
 			stream.Position = 0;
-			var buffer = new byte[sizeof(long)];
+			var buffer = new byte[PositionHolderSize];
 			stream.Read(buffer, 0, buffer.Length);
 			var position = BitConverter.ToInt64(buffer, 0);
-			Assert.AreEqual(dataLength + sizeof(long), position);
+			Assert.AreEqual(dataLength + PositionHolderSize, position);
 
 			return position;
 		}

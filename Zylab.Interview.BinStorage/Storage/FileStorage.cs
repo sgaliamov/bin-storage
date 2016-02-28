@@ -7,31 +7,30 @@ using Zylab.Interview.BinStorage.Index;
 namespace Zylab.Interview.BinStorage.Storage {
 
 	public class FileStorage : IStorage {
-		private const int DefaultReadBufferSize = 0x1000; // 4KB
-		private const int DefaultCapacity = 0x100000; // 256 MB
+		private const int DefaultReadBufferSize = 0x2800; // 10 KB
+		private const long DefaultCapacity = 0x100000; // 256 MB
+		private const int PositionHolderSize = sizeof(long);
+
+		private readonly int _readBufferSize;
 		private readonly HashAlgorithm _hashAlgorithm;
 		private readonly MemoryMappedFile _mappedFile;
-		private readonly int _readBufferSize;
 		private readonly MemoryMappedViewAccessor _positionHolder;
 		private long _position;
+		private long _capacity;
 
-		public FileStorage(string storageFilePath, int capacity = DefaultCapacity, int readBufferSize = DefaultReadBufferSize) {
+		public FileStorage(string storageFilePath, long capacity = DefaultCapacity, int readBufferSize = DefaultReadBufferSize) {
+			_capacity = capacity;
 			_readBufferSize = readBufferSize;
 			_mappedFile = MemoryMappedFile.CreateFromFile(
 				storageFilePath,
 				FileMode.OpenOrCreate,
 				null,
-				capacity,
+				capacity + PositionHolderSize,
 				MemoryMappedFileAccess.ReadWrite);
 
-			_positionHolder = _mappedFile.CreateViewAccessor(0, sizeof(long));
-			_position = _positionHolder.ReadInt64(0);
-			if(_position == 0) {
-				_position = sizeof(long);
-				_positionHolder.Write(0, _position);
-			}
+			_positionHolder = _mappedFile.CreateViewAccessor(0, PositionHolderSize);
+			_position = InitPosition(_positionHolder);
 
-			// todo: create pool
 			_hashAlgorithm = MD5.Create();
 		}
 
@@ -84,6 +83,16 @@ namespace Zylab.Interview.BinStorage.Storage {
 			_positionHolder.Dispose();
 			_mappedFile.Dispose();
 			_hashAlgorithm.Dispose();
+		}
+
+		private static long InitPosition(UnmanagedMemoryAccessor viewAccessor) {
+			var position = viewAccessor.ReadInt64(0);
+			if(position != 0) return position;
+
+			position = PositionHolderSize;
+			viewAccessor.Write(0, position);
+
+			return position;
 		}
 	}
 
