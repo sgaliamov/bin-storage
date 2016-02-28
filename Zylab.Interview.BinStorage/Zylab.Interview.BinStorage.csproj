@@ -56,6 +56,12 @@
   <ItemGroup>
     <Compile Include="BinaryStorage.cs" />
     <Compile Include="IBinaryStorage.cs" />
+    <Compile Include="Index\BTree\BTreeIndex.cs" />
+    <Compile Include="Index\BTree\INodeStorage.cs" />
+    <Compile Include="Index\BTree\NodeData.cs" />
+    <Compile Include="Index\BTree\Node.cs" />
+    <Compile Include="Index\BTree\MemoryNodeStorage.cs" />
+    <Compile Include="Index\BTree\PersistentNodeStorage.cs" />
     <Compile Include="Index\RedBlackTreeIndex.cs" />
     <Compile Include="Index\IIndex.cs" />
     <Compile Include="Index\IndexData.cs" />
@@ -64,6 +70,7 @@
     <Compile Include="Storage\IStorage.cs" />
     <Compile Include="Storage\FileStorage.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
