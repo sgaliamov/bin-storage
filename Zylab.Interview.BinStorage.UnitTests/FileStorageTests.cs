@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Storage;
@@ -12,6 +15,8 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 
 	[TestClass]
 	public class FileStorageTests {
+		private const int TestCapacity = 0x400; // 1KB
+		private const int SizeOfGuid = 16;
 		private string _storageFilePath;
 
 		[TestInitialize]
@@ -30,62 +35,70 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 			var data = Guid.NewGuid().ToByteArray();
 
 			IndexData indexData;
-			using(var target = new FileStorage(_storageFilePath, 12)) {
+			using(var target = new FileStorage(_storageFilePath, TestCapacity, 12)) {
 				var inputStream = new MemoryStream(data);
 
 				indexData = target.Append(inputStream);
 			}
 
 			using(var file = new FileStream(_storageFilePath, FileMode.Open)) {
-				var tempStream = new MemoryStream();
-				file.CopyTo(tempStream);
-				var actual = tempStream.ToArray();
+				var position = ReadAndCheckPosition(file, SizeOfGuid);
 
-				Check(data, 0, actual, indexData, file.Length);
+				var actual = new byte[SizeOfGuid];
+				file.Read(actual, 0, SizeOfGuid);
+
+				Check(data, sizeof(long), actual, indexData, position);
 			}
 		}
 
 		[TestMethod]
 		public void Append_Test() {
-			using(var target = new FileStorage(_storageFilePath)) {
+			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
 				var ms = new MemoryStream();
-				ms.Write(Guid.NewGuid().ToByteArray(), 0, 16);
-				ms.Write(Guid.NewGuid().ToByteArray(), 0, 16);
+				ms.Write(Guid.NewGuid().ToByteArray(), 0, SizeOfGuid);
+				ms.Write(Guid.NewGuid().ToByteArray(), 0, SizeOfGuid);
 				ms.Position = 0;
 				target.Append(ms);
 			}
 
 			var data = Guid.NewGuid().ToByteArray();
 			IndexData indexData;
-			using(var target = new FileStorage(_storageFilePath)) {
-				var inputStream = new MemoryStream(data);
-				indexData = target.Append(inputStream);
+			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
+				indexData = target.Append(new MemoryStream(data));
 			}
 
 			using(var file = new FileStream(_storageFilePath, FileMode.Open)) {
-				var tempStream = new MemoryStream();
-				file.CopyTo(tempStream);
-				var actual = new byte[16];
-				tempStream.Position = 32;
-				tempStream.Read(actual, 0, actual.Length);
+				var position = ReadAndCheckPosition(file, SizeOfGuid * 3);
 
-				Check(data, 32, actual, indexData, file.Length);
+				var actual = new byte[SizeOfGuid];
+				file.Position = SizeOfGuid * 2 + sizeof(long);
+				file.Read(actual, 0, actual.Length);
+
+				Check(data, sizeof(long) + SizeOfGuid * 2, actual, indexData, position);
 			}
+		}
+
+		[TestMethod]
+		public void Appent_OverCapacity_Test() {
+			Assert.Fail();
 		}
 
 		[TestMethod]
 		public void Append_Empty_Test() {
-			using(var target = new FileStorage(_storageFilePath)) {
+			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
 				var indexData = target.Append(new MemoryStream());
 				Assert.IsNull(indexData);
 			}
+			using(var file = new FileStream(_storageFilePath, FileMode.Open)) {
+				ReadAndCheckPosition(file, 0);
+			}
 
-			Assert.AreEqual(0, new FileInfo(_storageFilePath).Length);
+			Assert.AreEqual(TestCapacity, new FileInfo(_storageFilePath).Length);
 		}
 
 		[TestMethod]
 		public void Get_Test() {
-			using(var target = new FileStorage(_storageFilePath)) {
+			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
 				var list = new List<KeyValuePair<IndexData, byte[]>>();
 				for(var i = 0; i < 10; i++) {
 					var data = Guid.NewGuid().ToByteArray();
@@ -105,15 +118,53 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 			}
 		}
 
+		[TestMethod]
+		public void ParallelMemoryMappedFile_Test() {
+			var ints = Enumerable.Range(0, 10).Select(x => x.ToString()).ToArray();
+			var pos = 0;
+			using(var mmf = MemoryMappedFile.CreateFromFile(_storageFilePath, FileMode.OpenOrCreate, null, 10)) {
+				ints.AsParallel()
+					.WithDegreeOfParallelism(4)
+					.ForAll(
+						x => {
+							var buffer = Encoding.UTF8.GetBytes(x);
+							// ReSharper disable once AccessToModifiedClosure
+							var p = Interlocked.Add(ref pos, buffer.Length) - buffer.Length;
+							// ReSharper disable once AccessToDisposedClosure
+							using(var stream = mmf.CreateViewStream(p, buffer.Length)) {
+								stream.Write(buffer, 0, buffer.Length);
+							}
+						});
+			}
+
+			var actual = new string[ints.Length];
+			using(var mmf = MemoryMappedFile.CreateFromFile(_storageFilePath, FileMode.Open, null, 10)) {
+				Enumerable.Range(0, 10)
+					.AsParallel()
+					.WithDegreeOfParallelism(4)
+					.ForAll(
+						x => {
+							var buffer = new byte[1];
+							// ReSharper disable once AccessToDisposedClosure
+							using(var stream = mmf.CreateViewStream(x, buffer.Length)) {
+								stream.Read(buffer, 0, buffer.Length);
+								actual[x] = Encoding.UTF8.GetString(buffer);
+							}
+						});
+
+				Assert.IsTrue(ints.SequenceEqual(actual.OrderBy(x => x)));
+			}
+		}
+
 		[SuppressMessage("ReSharper", "UnusedParameter.Local")]
 		private static void Check(
 			byte[] inputData,
 			int expectedOffset,
 			byte[] actualData,
 			IndexData indexData,
-			long fileLength) {
+			long position) {
 			Assert.IsTrue(inputData.SequenceEqual(actualData));
-			Assert.AreEqual(fileLength, indexData.Offset + indexData.Size);
+			Assert.AreEqual(position, indexData.Offset + indexData.Size);
 
 			using(var md5 = MD5.Create()) {
 				var inputStream = new MemoryStream(inputData);
@@ -122,6 +173,16 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 				Assert.AreEqual(inputData.Length, indexData.Size);
 				Assert.IsTrue(hash.SequenceEqual(indexData.Md5Hash));
 			}
+		}
+
+		private static long ReadAndCheckPosition(Stream stream, int dataLength) {
+			stream.Position = 0;
+			var buffer = new byte[sizeof(long)];
+			stream.Read(buffer, 0, buffer.Length);
+			var position = BitConverter.ToInt64(buffer, 0);
+			Assert.AreEqual(dataLength + sizeof(long), position);
+
+			return position;
 		}
 	}
 
