@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Storage;
 
-namespace Zylab.Interview.BinStorage.UnitTests {
+namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 
 	[TestClass]
 	public class FileStorageTests {

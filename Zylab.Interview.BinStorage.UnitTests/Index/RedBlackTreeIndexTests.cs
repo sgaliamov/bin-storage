@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zylab.Interview.BinStorage.Index;
 
-namespace Zylab.Interview.BinStorage.UnitTests {
+namespace Zylab.Interview.BinStorage.UnitTests.Index {
 
 	[TestClass]
 	public class RedBlackTreeIndexTests {
