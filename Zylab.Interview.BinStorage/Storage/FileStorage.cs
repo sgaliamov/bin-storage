@@ -9,10 +9,9 @@ namespace Zylab.Interview.BinStorage.Storage {
 
 	public class FileStorage : IStorage {
 		private const int DefaultReadBufferSize = 0x2800; // 10 KB
-		private const long DefaultCapacity = 0x100000; // 256 MB
+		private const long DefaultCapacity = 0x40000000; // 1 GB
 		private const int PositionHolderSize = sizeof(long);
 
-		private readonly HashAlgorithm _hashAlgorithm;
 		private readonly int _readBufferSize;
 		private readonly string _storageFilePath;
 		private long _capacity;
@@ -27,7 +26,6 @@ namespace Zylab.Interview.BinStorage.Storage {
 			int readBufferSize = DefaultReadBufferSize) {
 			_storageFilePath = storageFilePath;
 			_readBufferSize = readBufferSize;
-			_hashAlgorithm = MD5.Create();
 			_capacity = capacity + PositionHolderSize;
 
 			InitFile();
@@ -46,24 +44,25 @@ namespace Zylab.Interview.BinStorage.Storage {
 
 			var prevCount = count;
 			var prevBuffer = Interlocked.Exchange(ref buffer, new byte[_readBufferSize]);
-			_hashAlgorithm.Initialize();
-			do {
-				Write(prevBuffer, prevCount);
+			using(var hashAlgorithm = MD5.Create()) {
+				do {
+					Write(prevBuffer, prevCount);
 
-				count = data.Read(buffer, 0, _readBufferSize);
-				if(count > 0) {
-					_hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
-					prevCount = count;
-					prevBuffer = Interlocked.Exchange(ref buffer, prevBuffer);
-				}
-				else {
-					_hashAlgorithm.TransformFinalBlock(prevBuffer, 0, prevCount);
-					break;
-				}
-			} while(true);
-			_positionHolder.Write(0, _position);
+					count = data.Read(buffer, 0, _readBufferSize);
+					if(count > 0) {
+						hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
+						prevCount = count;
+						prevBuffer = Interlocked.Exchange(ref buffer, prevBuffer);
+					}
+					else {
+						hashAlgorithm.TransformFinalBlock(prevBuffer, 0, prevCount);
+						break;
+					}
+				} while(true);
+				_positionHolder.Write(0, _position);
 
-			indexData.Md5Hash = _hashAlgorithm.Hash;
+				indexData.Md5Hash = hashAlgorithm.Hash;
+			}
 			indexData.Size = _position - indexData.Offset;
 
 			return indexData;
@@ -76,7 +75,6 @@ namespace Zylab.Interview.BinStorage.Storage {
 		public void Dispose() {
 			// todo: https://msdn.microsoft.com/en-us/library/system.idisposable(v=vs.110).aspx
 			DisposeFile();
-			_hashAlgorithm.Dispose();
 		}
 
 		private void Write(byte[] buffer, int count) {
@@ -109,7 +107,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 				_position = PositionHolderSize;
 				_positionHolder.Write(0, _position);
 			}
-			_writer = _mappedFile.CreateViewStream(_position, 0);
+			_writer = _mappedFile.CreateViewStream(_position, _capacity - _position);
 		}
 
 		private long ReadPosition(out long fileLength) {

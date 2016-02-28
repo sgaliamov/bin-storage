@@ -110,6 +110,24 @@ namespace Zylab.Interview.BinStorage.UnitTests {
 			}
 		}
 
+		[Ignore]
+		[TestMethod]
+		public void Get_AfterResize_Test() {
+			var data = new[] { Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray() };
+			const int capacity = SizeOfGuid + SizeOfGuid / 3;
+
+			using(var target = new FileStorage(_storageFilePath, capacity)) {
+				var indexData = target.Append(new MemoryStream(data[0]));
+				using(var stream = target.Get(indexData)) {
+					target.Append(new MemoryStream(data[1]));
+
+					var ms = new MemoryStream();
+					stream.CopyTo(ms);
+					Assert.IsTrue(data[0].SequenceEqual(ms.ToArray()));
+				}
+			}
+		}
+
 		[TestMethod]
 		public void Appent_BigData_Test() {
 			var bigData = Guid.NewGuid().ToByteArray();
