@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Zylab.Interview.BinStorage.Index.BTree {
 
@@ -45,11 +44,11 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 
 		private IndexData Search(INode parent, string key) {
 			while(true) {
-				IndexDataKey found;
+				IndexData found;
 				var i = _storage.SearchPosition(parent, key, out found);
 
 				if(found != null) {
-					return found.Data;
+					return found;
 				}
 
 				if(_storage.IsLeaf(parent)) {
@@ -82,7 +81,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 
 		private void InsertNonFull(INode parent, string key, IndexData data) {
 			while(true) {
-				IndexDataKey found;
+				IndexData found;
 				var positionToInsert = _storage.SearchPosition(parent, key, out found);
 
 				if(_storage.IsLeaf(parent)) {
@@ -94,7 +93,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 				var child = _storage.GetChildren(parent, positionToInsert);
 				if(_storage.IsFull(child)) {
 					Split(parent, positionToInsert, child);
-					if(string.Compare(key, _storage.GetKey(parent, positionToInsert).Key, StringComparison.OrdinalIgnoreCase) > 0) {
+					if(_storage.Compare(parent, positionToInsert, key) > 0) {
 						positionToInsert++;
 					}
 				}

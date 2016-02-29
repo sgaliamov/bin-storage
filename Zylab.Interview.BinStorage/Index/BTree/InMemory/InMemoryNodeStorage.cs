@@ -21,15 +21,24 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			((InMemoryNode)node).Childrens.AddRange(nodes);
 		}
 
-		public void AddRangeKeys(INode node, IEnumerable<IndexDataKey> keys) {
+		public void AddRangeKeys(INode node, IEnumerable<IKey> keys) {
 			((InMemoryNode)node).Keys.AddRange(keys);
+		}
+
+		public void Commit(INode node) {
+			// do nothing			
+		}
+
+		public int Compare(INode parent, int keyIndex, string key) {
+			var indexDataKey = (IndexDataKey)GetKey(parent, keyIndex);
+			return string.Compare(key, indexDataKey.Key, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public INode GetChildren(INode node, int position) {
 			return ((InMemoryNode)node).Childrens[position];
 		}
 
-		public IndexDataKey GetKey(INode node, int position) {
+		public IKey GetKey(INode node, int position) {
 			return ((InMemoryNode)node).Keys[position];
 		}
 
@@ -37,7 +46,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			return ((InMemoryNode)node).Childrens.GetRange(index, count);
 		}
 
-		public IEnumerable<IndexDataKey> GetRangeKeys(INode node, int index, int count) {
+		public IEnumerable<IKey> GetRangeKeys(INode node, int index, int count) {
 			return ((InMemoryNode)node).Keys.GetRange(index, count);
 		}
 
@@ -49,7 +58,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			((InMemoryNode)node).Childrens.Insert(position, children);
 		}
 
-		public void InsertKey(INode node, int position, IndexDataKey key) {
+		public void InsertKey(INode node, int position, IKey key) {
 			((InMemoryNode)node).Keys.Insert(position, key);
 		}
 
@@ -61,7 +70,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			return ((InMemoryNode)node).Childrens.Count == 0;
 		}
 
-		public IndexDataKey NewKey(string key, IndexData data) {
+		public IKey NewKey(string key, IndexData data) {
 			return new IndexDataKey {
 				Key = key,
 				Data = data
@@ -76,23 +85,20 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			((InMemoryNode)node).Childrens.RemoveRange(index, count);
 		}
 
-		public void Commit(INode node) {
-			// do nothing			
-		}
-
 		public void RemoveRangeKeys(INode node, int index, int count) {
 			((InMemoryNode)node).Keys.RemoveRange(index, count);
 		}
 
-		public int SearchPosition(INode node, string key, out IndexDataKey found) {
+		public int SearchPosition(INode node, string key, out IndexData found) {
 			var lo = 0;
 			var hi = ((InMemoryNode)node).Keys.Count - 1;
 			while(lo <= hi) {
 				var i = lo + ((hi - lo) >> 1);
 
-				var c = string.Compare(((InMemoryNode)node).Keys[i].Key, key, StringComparison.OrdinalIgnoreCase);
+				var indexDataKey = (IndexDataKey)((InMemoryNode)node).Keys[i];
+				var c = string.Compare(indexDataKey.Key, key, StringComparison.OrdinalIgnoreCase);
 				if(c == 0) {
-					found = ((InMemoryNode)node).Keys[i];
+					found = indexDataKey.Data;
 					return i;
 				}
 				if(c < 0) {

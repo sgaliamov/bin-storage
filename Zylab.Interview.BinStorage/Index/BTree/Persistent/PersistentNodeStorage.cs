@@ -8,14 +8,14 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 	public class PersistentNodeStorage : INodeStorage {
 		private readonly long _capacity;
 		private readonly string _indexFilePath;
-		private readonly MemoryMappedFile _mappedFile;
+		private readonly MemoryMappedFile _nodesFile;
 		private INode _root;
 
 		public PersistentNodeStorage(string indexFilePath, long capacity, int degree = 1024) {
 			Degree = degree;
 			_indexFilePath = indexFilePath;
 			_capacity = capacity;
-			_mappedFile = MemoryMappedFile.CreateFromFile(
+			_nodesFile = MemoryMappedFile.CreateFromFile(
 				_indexFilePath,
 				FileMode.OpenOrCreate,
 				null,
@@ -25,7 +25,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 
 		public void Dispose() {
-			throw new NotImplementedException();
+			_nodesFile.Dispose();
 		}
 
 		public void AddChildren(INode node, INode children) {
@@ -36,26 +36,28 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			throw new NotImplementedException();
 		}
 
-		public void AddRangeKeys(INode node, IEnumerable<IndexDataKey> keys) {
+		public void AddRangeKeys(INode node, IEnumerable<IKey> keys) {
 			throw new NotImplementedException();
 		}
 
 		public void Commit(INode node) {
 			var persistentNode = (PersistentNode)node;
 
-			// _mappedFile.CreateViewAccessor(persistentNode.Offset)
+			using(var accessor = _nodesFile.CreateViewAccessor(persistentNode.Offset, persistentNode.Size)) {
+				accessor.Write(0, ref persistentNode);
+			}
 		}
 
 		public INode GetChildren(INode node, int position) {
 			var persistentNode = (PersistentNode)node;
-			using(var accessor = _mappedFile.CreateViewAccessor(persistentNode.Offset, 100)) {
+			using(var accessor = _nodesFile.CreateViewAccessor(persistentNode.Offset, 100)) {
 				PersistentNode childred;
 				accessor.Read(0, out childred);
 				return childred;
 			}
 		}
 
-		public IndexDataKey GetKey(INode node, int position) {
+		public IKey GetKey(INode node, int position) {
 			throw new NotImplementedException();
 		}
 
@@ -63,7 +65,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			throw new NotImplementedException();
 		}
 
-		public IEnumerable<IndexDataKey> GetRangeKeys(INode node, int index, int count) {
+		public IEnumerable<IKey> GetRangeKeys(INode node, int index, int count) {
 			throw new NotImplementedException();
 		}
 
@@ -75,7 +77,11 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			throw new NotImplementedException();
 		}
 
-		public void InsertKey(INode node, int position, IndexDataKey key) {
+		public int Compare(INode parent, int keyIndex, string key) {
+			throw new NotImplementedException();
+		}
+
+		public void InsertKey(INode node, int position, IKey key) {
 			throw new NotImplementedException();
 		}
 
@@ -87,8 +93,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			throw new NotImplementedException();
 		}
 
-		public IndexDataKey NewKey(string key, IndexData data) {
-			throw new NotImplementedException();
+		public IKey NewKey(string key, IndexData data) {
+			return null;
 		}
 
 		public INode NewNode() {
@@ -103,7 +109,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			throw new NotImplementedException();
 		}
 
-		public int SearchPosition(INode node, string key, out IndexDataKey found) {
+		public int SearchPosition(INode node, string key, out IndexData found) {
 			throw new NotImplementedException();
 		}
 

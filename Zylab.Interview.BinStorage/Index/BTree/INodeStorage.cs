@@ -5,19 +5,20 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 
 	public interface INodeStorage : IDisposable {
 		int Degree { get; }
-		IndexDataKey NewKey(string key, IndexData data);
+		IKey NewKey(string key, IndexData data);
 		INode NewNode();
 		INode GetRoot();
 		void SetRoot(INode node);
 
 		bool IsFull(INode node);
 		bool IsLeaf(INode node);
-		int SearchPosition(INode node, string key, out IndexDataKey found);
+		int SearchPosition(INode node, string key, out IndexData found);
+		int Compare(INode parent, int keyIndex, string key);
 
-		void InsertKey(INode node, int position, IndexDataKey key);
-		IndexDataKey GetKey(INode node, int position);
-		void AddRangeKeys(INode node, IEnumerable<IndexDataKey> keys);
-		IEnumerable<IndexDataKey> GetRangeKeys(INode node, int index, int count);
+		void InsertKey(INode node, int position, IKey key);
+		IKey GetKey(INode node, int position);
+		void AddRangeKeys(INode node, IEnumerable<IKey> keys);
+		IEnumerable<IKey> GetRangeKeys(INode node, int index, int count);
 		void RemoveRangeKeys(INode node, int index, int count);
 
 		void AddChildren(INode node, INode children);
