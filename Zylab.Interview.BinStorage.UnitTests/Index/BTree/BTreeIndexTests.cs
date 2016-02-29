@@ -21,7 +21,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree {
 		}
 
 		protected override IIndex Create() {
-			return new BTreeIndex(_nodeStorage, TestDegree);
+			return new BTreeIndex(_nodeStorage);
 		}
 	}
 

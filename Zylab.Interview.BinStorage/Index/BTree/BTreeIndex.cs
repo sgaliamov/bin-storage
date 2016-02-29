@@ -5,11 +5,13 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 
 	public class BTreeIndex : IIndex {
 		private readonly INodeStorage _storage;
-		private readonly int _t;
 
-		public BTreeIndex(INodeStorage storage, int t) {
+		public BTreeIndex(INodeStorage storage) {
 			_storage = storage;
-			_t = t;
+		}
+
+		public void Dispose() {
+			_storage.Dispose();
 		}
 
 		public void Add(string key, IndexData indexData) {
@@ -21,9 +23,14 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 
 			var oldRoot = root;
 			root = _storage.NewNode();
+			_storage.SetRoot(root);
 			root.AddChildren(oldRoot);
 			Split(root, 0, oldRoot);
 			InsertNonFull(root, key, indexData);
+		}
+
+		public bool Contains(string key) {
+			return Search(_storage.GetRoot(), key) != null;
 		}
 
 		public IndexData Get(string key) {
@@ -34,14 +41,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			}
 
 			return data;
-		}
-
-		public bool Contains(string key) {
-			return Search(_storage.GetRoot(), key) != null;
-		}
-
-		public void Dispose() {
-			_storage.Dispose();
 		}
 
 		private static IndexData Search(INode parent, string key) {
@@ -64,16 +63,16 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		private void Split(INode parent, int position, INode fullNode) {
 			var newNode = _storage.NewNode();
 
-			parent.InsertKey(position, fullNode.GetKey(_t - 1));
+			parent.InsertKey(position, fullNode.GetKey(_storage.Degree - 1));
 			parent.InsertChildren(position + 1, newNode);
 
-			newNode.AddRangeKeys(fullNode.GetRangeKeys(_t, _t - 1));
+			newNode.AddRangeKeys(fullNode.GetRangeKeys(_storage.Degree, _storage.Degree - 1));
 
-			fullNode.RemoveRangeKeys(_t - 1, _t);
+			fullNode.RemoveRangeKeys(_storage.Degree - 1, _storage.Degree);
 
 			if(!fullNode.IsLeaf) {
-				newNode.AddRangeChildrens(fullNode.GetRangeChildrens(_t, _t));
-				fullNode.RemoveRangeChildrens(_t, _t);
+				newNode.AddRangeChildrens(fullNode.GetRangeChildrens(_storage.Degree, _storage.Degree));
+				fullNode.RemoveRangeChildrens(_storage.Degree, _storage.Degree);
 			}
 		}
 
@@ -98,8 +97,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 				parent = parent.GetChildren(positionToInsert);
 			}
 		}
-
-		
 	}
 
 }

@@ -8,7 +8,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree {
 
 	[TestClass]
 	public class BTreeIndexMultiThreadingTests : MultiThreadingTests {
-		private const int TestDegree = 5;
+		private const int TestDegree = 6;
 		private readonly TimeSpan _timeout = TimeSpan.FromSeconds(10);
 		private InMemoryNodeStorage _nodeStorage;
 
@@ -23,7 +23,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree {
 		}
 
 		protected override IIndex Create() {
-			return new ThreadSafeIndex(new BTreeIndex(_nodeStorage, TestDegree), _timeout);
+			return new ThreadSafeIndex(new BTreeIndex(_nodeStorage), _timeout);
 		}
 	}
 
