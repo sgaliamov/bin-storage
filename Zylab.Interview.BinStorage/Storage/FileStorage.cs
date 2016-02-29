@@ -40,10 +40,6 @@ namespace Zylab.Interview.BinStorage.Storage {
 			// todo: write nonseekable input stream to separate queue and join it when finish
 			var buffer = new byte[_readBufferSize];
 			var count = data.Read(buffer, 0, _readBufferSize);
-			if(count == 0) {
-				return null;
-			}
-
 			var prevCount = count;
 			var prevBuffer = Interlocked.Exchange(ref buffer, new byte[_readBufferSize]);
 			using(var hashAlgorithm = MD5.Create()) {
@@ -71,6 +67,10 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		public Stream Get(IndexData indexData) {
+			if(indexData.Size == 0) {
+				return Stream.Null;
+			}
+
 			return _mappedFile.CreateViewStream(indexData.Offset, indexData.Size);
 		}
 

@@ -160,7 +160,9 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 		public void Append_Empty_Test() {
 			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
 				var indexData = target.Append(new MemoryStream());
-				Assert.IsNull(indexData);
+				using(var stream = target.Get(indexData)) {
+					Assert.AreEqual(0, stream.Length);
+				}
 			}
 			using(var file = new FileStream(_storageFilePath, FileMode.Open)) {
 				ReadAndCheckPosition(file, 0);

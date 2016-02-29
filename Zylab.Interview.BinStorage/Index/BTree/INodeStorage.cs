@@ -12,7 +12,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 
 		bool IsFull(INode node);
 		bool IsLeaf(INode node);
-		int SearchPosition(INode node, string key, out IndexData found);
+		bool SearchPosition(INode node, string key, out IndexData found, out int position);
 		int Compare(INode parent, int keyIndex, string key);
 
 		void InsertKey(INode node, int position, IKey key);

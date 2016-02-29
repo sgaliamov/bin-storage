@@ -155,7 +155,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			throw new NotImplementedException();
 		}
 
-		public int SearchPosition(INode node, string key, out IndexData found) {
+		public bool SearchPosition(INode node, string key, out IndexData found, out int position) {
 			throw new NotImplementedException();
 		}
 

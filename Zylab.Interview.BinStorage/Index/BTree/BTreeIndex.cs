@@ -29,33 +29,33 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public bool Contains(string key) {
-			return Search(_storage.GetRoot(), key) != null;
+			IndexData data;
+			return Search(_storage.GetRoot(), key, out data);
 		}
 
 		public IndexData Get(string key) {
-			var data = Search(_storage.GetRoot(), key);
-
-			if(data == null) {
+			IndexData data;
+			if(!Search(_storage.GetRoot(), key, out data)) {
 				throw new KeyNotFoundException($"The given key ({key}) was not present in the dictionary.");
 			}
 
 			return data;
 		}
 
-		private IndexData Search(INode parent, string key) {
+		private bool Search(INode parent, string key, out IndexData found) {
 			while(true) {
-				IndexData found;
-				var i = _storage.SearchPosition(parent, key, out found);
+				int position;
+				var isFound = _storage.SearchPosition(parent, key, out found, out position);
 
-				if(found != null) {
-					return found;
+				if(isFound) {
+					return true;
 				}
 
 				if(_storage.IsLeaf(parent)) {
-					return null;
+					return false;
 				}
 
-				parent = _storage.GetChildren(parent, i);
+				parent = _storage.GetChildren(parent, position);
 			}
 		}
 
@@ -82,7 +82,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		private void InsertNonFull(INode parent, string key, IndexData data) {
 			while(true) {
 				IndexData found;
-				var positionToInsert = _storage.SearchPosition(parent, key, out found);
+				int positionToInsert;
+				_storage.SearchPosition(parent, key, out found, out positionToInsert);
 
 				if(_storage.IsLeaf(parent)) {
 					_storage.InsertKey(parent, positionToInsert, _storage.NewKey(key, data));

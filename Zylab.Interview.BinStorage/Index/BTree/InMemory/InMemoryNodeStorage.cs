@@ -89,7 +89,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			((InMemoryNode)node).Keys.RemoveRange(index, count);
 		}
 
-		public int SearchPosition(INode node, string key, out IndexData found) {
+		public bool SearchPosition(INode node, string key, out IndexData found, out  int position) {
 			var lo = 0;
 			var hi = ((InMemoryNode)node).Keys.Count - 1;
 			while(lo <= hi) {
@@ -99,7 +99,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 				var c = string.Compare(indexDataKey.Key, key, StringComparison.OrdinalIgnoreCase);
 				if(c == 0) {
 					found = indexDataKey.Data;
-					return i;
+					position = i;
+					return true;
 				}
 				if(c < 0) {
 					lo = i + 1;
@@ -109,8 +110,9 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 				}
 			}
 
-			found = null;
-			return lo;
+			found = default(IndexData);
+			position = lo;
+			return false;
 		}
 
 		public void SetRoot(INode node) {
