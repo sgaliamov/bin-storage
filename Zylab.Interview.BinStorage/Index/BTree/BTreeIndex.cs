@@ -28,7 +28,13 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public IndexData Get(string key) {
-			return Search(_root, key);
+			var data = Search(_root, key);
+
+			if(data == null) {
+				throw new KeyNotFoundException($"The given key ({key}) was not present in the dictionary.");
+			}
+
+			return data;
 		}
 
 		public bool Contains(string key) {
