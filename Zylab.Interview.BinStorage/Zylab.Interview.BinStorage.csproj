@@ -62,7 +62,7 @@
     <Compile Include="Index\BTree\Node.cs" />
     <Compile Include="Index\BTree\MemoryNodeStorage.cs" />
     <Compile Include="Index\BTree\PersistentNodeStorage.cs" />
-    <Compile Include="Index\RedBlackTreeIndex.cs" />
+    <Compile Include="Index\RedBlackTree\RedBlackTreeIndex.cs" />
     <Compile Include="Index\IIndex.cs" />
     <Compile Include="Index\IndexData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
