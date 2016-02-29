@@ -10,8 +10,9 @@ namespace Zylab.Interview.BinStorage {
 		private readonly IStorage _storage;
 
 		public BinaryStorage(StorageConfiguration configuration) {
-			_index = new RedBlackTreeIndex(
-				Path.Combine(configuration.WorkingFolder, configuration.IndexFileName),
+			_index = new ThreadSafeIndex(
+				new RedBlackTreeIndex(
+					Path.Combine(configuration.WorkingFolder, configuration.IndexFileName)),
 				configuration.IndexTimeout);
 			_storage = new FileStorage(Path.Combine(configuration.WorkingFolder, configuration.StorageFileName));
 		}

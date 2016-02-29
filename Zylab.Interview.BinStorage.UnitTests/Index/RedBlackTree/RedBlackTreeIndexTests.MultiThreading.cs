@@ -24,7 +24,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.RedBlackTree {
 		}
 
 		protected override IIndex Create() {
-			return new RedBlackTreeIndex(_indexFilePath, _timeout);
+			return new ThreadSafeIndex(new RedBlackTreeIndex(_indexFilePath), _timeout);
 		}
 	}
 

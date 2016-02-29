@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Index.RedBlackTree;
@@ -9,13 +8,11 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.RedBlackTree {
 	[TestClass]
 	public class RedBlackTreeIndexTests : IndexTests {
 		private string _indexFilePath;
-		private TimeSpan _timeout;
 
 		[TestInitialize]
 		public void TestInitialize() {
 			_indexFilePath = Path.GetTempFileName();
 			File.Delete(_indexFilePath);
-			_timeout = TimeSpan.FromSeconds(10);
 		}
 
 		[TestCleanup]
@@ -24,7 +21,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.RedBlackTree {
 		}
 
 		protected override IIndex Create() {
-			return new RedBlackTreeIndex(_indexFilePath, _timeout);
+			return new RedBlackTreeIndex(_indexFilePath);
 		}
 	}
 

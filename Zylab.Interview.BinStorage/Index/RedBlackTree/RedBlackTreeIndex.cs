@@ -1,59 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 
 namespace Zylab.Interview.BinStorage.Index.RedBlackTree {
 
 	public class RedBlackTreeIndex : IIndex {
 		private readonly string _indexFilePath;
-		private readonly ReaderWriterLockSlim _locker;
-		private readonly TimeSpan _timeout;
 		private readonly SortedDictionary<string, IndexData> _tree;
 
-		public RedBlackTreeIndex(string indexFilePath, TimeSpan timeout) {
+		public RedBlackTreeIndex(string indexFilePath) {
 			_indexFilePath = indexFilePath;
-			_timeout = timeout;
-			_locker = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
 			_tree = GetOrCreateTree(_indexFilePath);
 		}
 
 		public void Add(string key, IndexData data) {
-			try {
-				if(!_locker.TryEnterWriteLock(_timeout))
-					throw new TimeoutException($"Timeout {_timeout} expired to add key {key} to index");
-
-				_tree.Add(key, data);
-			}
-			finally {
-				_locker.ExitWriteLock();
-			}
+			_tree.Add(key, data);
 		}
 
 		public IndexData Get(string key) {
-			try {
-				if(!_locker.TryEnterReadLock(_timeout))
-					throw new TimeoutException($"Timeout {_timeout} expired to read index by key {key}");
-
-				return _tree[key];
-			}
-			finally {
-				_locker.ExitReadLock();
-			}
+			return _tree[key];
 		}
 
 		public bool Contains(string key) {
-			try {
-				if(!_locker.TryEnterReadLock(_timeout))
-					throw new TimeoutException($"Timeout {_timeout} expired to read index by key {key}");
-
-				return _tree.ContainsKey(key);
-			}
-			finally {
-				_locker.ExitReadLock();
-			}
+			return _tree.ContainsKey(key);
 		}
 
 		public void Dispose() {
