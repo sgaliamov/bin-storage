@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
@@ -9,50 +8,44 @@ using System.Text;
 namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 	public class PersistentNodeStorage : INodeStorage<PersistentNode, KeyData> {
-		private const int PositionHolderSize = sizeof(long);
-		private const int RootHolderOffset = PositionHolderSize;
+		private const int CursorHolderSize = sizeof(long);
+		private const int RootHolderOffset = CursorHolderSize;
 		private const int RootHolderSize = sizeof(long);
 		private const int DefaultDegre = 1024;
 		private const long DefaultCapacity = 0x400000; // 4 MB
 		private const int IndexDataSize = 16 + sizeof(long) + sizeof(long); // md5 hash + offset + size
+		private readonly int _degree2;
 
-		private readonly long _capacity;
 		private readonly MemoryMappedFile _indexFile;
-		private readonly string _indexFilePath;
 		private readonly int _nodeSize;
-		private long _position;
+		private long _cursor;
 		private PersistentNode _root;
 
 		public PersistentNodeStorage(string indexFilePath, long capacity = DefaultCapacity, int degree = DefaultDegre) {
 			Degree = degree;
-			_indexFilePath = indexFilePath;
-			_capacity = capacity;
+			_degree2 = 2 * degree;
+			_nodeSize = _degree2 * sizeof(long) + (_degree2 - 1) * Marshal.SizeOf(typeof(KeyData)); // childs + keys
+
 			_indexFile = MemoryMappedFile.CreateFromFile(
-				_indexFilePath,
+				indexFilePath,
 				FileMode.OpenOrCreate,
 				null,
-				_capacity,
+				capacity,
 				MemoryMappedFileAccess.ReadWrite);
 
-			using(var accessor = _indexFile.CreateViewAccessor(0, PositionHolderSize)) {
-				_position = accessor.ReadInt64(0);
-				if(_position == 0) {
-					_position = PositionHolderSize + RootHolderSize;
-				}
-			}
-
-			_nodeSize = degree * (sizeof(long) + Marshal.SizeOf(typeof(KeyData))); // childs + keys
+			InitRootAndCursor();
 		}
 
 		public void Dispose() {
-			using(var accessor = _indexFile.CreateViewAccessor(0, PositionHolderSize)) {
-				accessor.Write(0, _position);
+			using(var accessor = _indexFile.CreateViewAccessor(0, CursorHolderSize)) {
+				accessor.Write(0, _cursor);
 			}
+			Commit(_root);
 			_indexFile.Dispose();
 		}
 
 		public void AddChildren(PersistentNode node, PersistentNode children) {
-			node.Childrens[node.ChildrensPosition++] = children.Offset;
+			node.Childrens[node.ChildrensCount++] = children.Offset;
 		}
 
 		public void Commit(PersistentNode node) {
@@ -83,54 +76,62 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public PersistentNode GetRoot() {
-			return _root ?? (_root = NewNode());
+			return _root;
 		}
 
 		public void InsertChildren(PersistentNode node, int position, PersistentNode children) {
-			throw new NotImplementedException();
+			Array.Copy(node.Childrens, position, node.Childrens, position + 1, node.ChildrensCount - position);
+			node.Childrens[position] = children.Offset;
+			node.ChildrensCount++;
 		}
 
 		public void InsertKey(PersistentNode node, int position, KeyData key) {
-			throw new NotImplementedException();
+			Array.Copy(node.Keys, position, node.Keys, position + 1, node.KeysCount - position);
+			node.Keys[position] = key;
+			node.KeysCount++;
 		}
 
 		public bool IsFull(PersistentNode node) {
-			return node.KeysPosition == 2 * Degree - 1;
+			return node.KeysCount == _degree2 - 1;
 		}
 
 		public bool IsLeaf(PersistentNode node) {
-			return node.ChildrensPosition == 0;
+			return node.ChildrensCount == 0;
 		}
 
-		public void MoveRightHalfChildrens(PersistentNode node, PersistentNode source) {
-			for(var i = Degree; i < Degree + Degree; i++) {
-				node.Childrens[node.ChildrensPosition++] = source.Childrens[i];
-				source.Childrens[i] = 0;
-			}
-			source.ChildrensPosition = Degree - 1;
+		public void MoveRightHalfChildrens(PersistentNode newNode, PersistentNode fullNode) {
+			Array.Copy(fullNode.Childrens, Degree, newNode.Childrens, 0, Degree);
+			newNode.ChildrensCount = Degree;
+
+			Array.Clear(fullNode.Childrens, Degree, Degree);
+			fullNode.ChildrensCount = Degree;
 		}
 
-		public void MoveRightHalfKeys(PersistentNode node, PersistentNode source) {
-			throw new NotImplementedException();
+		public void MoveRightHalfKeys(PersistentNode newNode, PersistentNode fullNode) {
+			Array.Copy(fullNode.Keys, Degree, newNode.Keys, 0, Degree - 1);
+			newNode.KeysCount = Degree - 1;
+
+			Array.Clear(fullNode.Keys, Degree - 1, Degree);
+			fullNode.KeysCount = Degree - 1;
 		}
 
 		public KeyData NewKey(string key, IndexData data) {
-			var newKey = new KeyData { Offset = _position };
+			var newKey = new KeyData { Offset = _cursor };
 
-			using(var accessor = _indexFile.CreateViewAccessor(_position, IndexDataSize)) {
+			using(var accessor = _indexFile.CreateViewAccessor(_cursor, IndexDataSize)) {
 				WriteKey(accessor, key);
 
-				accessor.Write(_position, ref data);
-				_position += IndexDataSize;
+				accessor.Write(_cursor, ref data);
+				_cursor += IndexDataSize;
 			}
 
-			newKey.Size = _position = newKey.Offset;
+			newKey.Size = _cursor = newKey.Offset;
 			return newKey;
 		}
 
 		public PersistentNode NewNode() {
-			var node = new PersistentNode(_position, Degree);
-			_position += _nodeSize;
+			var node = new PersistentNode(_cursor, _degree2);
+			_cursor += _nodeSize;
 
 			return node;
 		}
@@ -145,12 +146,30 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 		public int Degree { get; }
 
+		private void InitRootAndCursor() {
+			using(var accessor = _indexFile.CreateViewAccessor(0, CursorHolderSize)) {
+				_cursor = accessor.ReadInt64(0);
+				if(_cursor == 0) {
+					_cursor = CursorHolderSize + RootHolderSize;
+					_root = NewNode();
+				}
+				else {
+					var rootOffset = accessor.ReadInt64(RootHolderOffset);
+					using(var reader = _indexFile.CreateViewStream(rootOffset, _nodeSize)) {
+						var formatter = new BinaryFormatter();
+						_root = (PersistentNode)formatter.Deserialize(reader);
+						_root.Offset = RootHolderOffset;
+					}
+				}
+			}
+		}
+
 		private void WriteKey(UnmanagedMemoryAccessor accessor, string key) {
 			var keyBytes = Encoding.UTF8.GetBytes(key);
-			accessor.Write(_position, keyBytes.LongLength);
-			_position += sizeof(long);
-			accessor.WriteArray(_position, keyBytes, 0, keyBytes.Length);
-			_position += keyBytes.Length;
+			accessor.Write(_cursor, keyBytes.LongLength);
+			_cursor += sizeof(long);
+			accessor.WriteArray(_cursor, keyBytes, 0, keyBytes.Length);
+			_cursor += keyBytes.Length;
 		}
 	}
 
