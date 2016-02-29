@@ -23,8 +23,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		void AddChildren(TNode node, TNode children);
 		void InsertChildren(TNode node, int position, TNode children);
 		TNode GetChildren(TNode node, int position);
-		void AddRangeChildrens(TNode node, TNode source, int position, int count);
-		void RemoveRangeChildrens(TNode node, int index, int count);
+		void MoveChildrens(TNode node, TNode source, int position, int count);
 
 		void Commit(TNode node);
 		

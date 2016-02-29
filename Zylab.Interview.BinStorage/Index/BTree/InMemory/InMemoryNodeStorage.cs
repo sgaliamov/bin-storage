@@ -18,11 +18,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			node.Childrens.Add(children);
 		}
 
-		public void AddRangeChildrens(InMemoryNode node, InMemoryNode source, int position, int count) {
-			var range = source.Childrens.GetRange(position, count);
-			node.Childrens.AddRange(range);
-		}
-
 		public void AddRangeKeys(InMemoryNode node, IEnumerable<IndexDataKey> keys) {
 			node.Keys.AddRange(keys);
 		}
@@ -68,6 +63,12 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			return node.Childrens.Count == 0;
 		}
 
+		public void MoveChildrens(InMemoryNode node, InMemoryNode source, int position, int count) {
+			var range = source.Childrens.GetRange(position, count);
+			node.Childrens.AddRange(range);
+			source.Childrens.RemoveRange(position, count);
+		}
+
 		public IndexDataKey NewKey(string key, IndexData data) {
 			return new IndexDataKey {
 				Key = key,
@@ -77,10 +78,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 
 		public InMemoryNode NewNode() {
 			return new InMemoryNode(Degree);
-		}
-
-		public void RemoveRangeChildrens(InMemoryNode node, int index, int count) {
-			node.Childrens.RemoveRange(index, count);
 		}
 
 		public void RemoveRangeKeys(InMemoryNode node, int index, int count) {

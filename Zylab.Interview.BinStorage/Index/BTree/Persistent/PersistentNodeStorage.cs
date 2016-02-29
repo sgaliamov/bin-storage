@@ -55,13 +55,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			node.Childrens[node.ChildrensPosition++] = children.Offset;
 		}
 
-		public void AddRangeChildrens(PersistentNode node, PersistentNode source, int position, int count) {
-			for(var i = position; i < position + count; i++) {
-				node.Childrens[node.ChildrensPosition++] = source.Childrens[i];
-			}
-		}
-
-
 		public void AddRangeKeys(PersistentNode node, IEnumerable<KeyData> keys) {
 			foreach(var key in keys) {
 				node.Keys[node.KeysPosition++] = key;
@@ -119,6 +112,14 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			return node.ChildrensPosition == 0;
 		}
 
+		public void MoveChildrens(PersistentNode node, PersistentNode source, int position, int count) {
+			for(var i = position; i < position + count; i++) {
+				node.Childrens[node.ChildrensPosition++] = source.Childrens[i];
+				source.Childrens[i] = 0;
+			}
+			source.ChildrensPosition = position - 1;
+		}
+
 		public KeyData NewKey(string key, IndexData data) {
 			var newKey = new KeyData { Offset = _position };
 
@@ -138,10 +139,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			_position += _nodeSize;
 
 			return node;
-		}
-
-		public void RemoveRangeChildrens(PersistentNode node, int index, int count) {
-			throw new NotImplementedException();
 		}
 
 		public void RemoveRangeKeys(PersistentNode node, int index, int count) {

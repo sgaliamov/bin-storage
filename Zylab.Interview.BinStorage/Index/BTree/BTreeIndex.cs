@@ -71,8 +71,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			_storage.RemoveRangeKeys(fullNode, _storage.Degree - 1, _storage.Degree);
 
 			if(!_storage.IsLeaf(fullNode)) {
-				_storage.AddRangeChildrens(newNode, fullNode, _storage.Degree, _storage.Degree);
-				_storage.RemoveRangeChildrens(fullNode, _storage.Degree, _storage.Degree);
+				_storage.MoveChildrens(newNode, fullNode, _storage.Degree, _storage.Degree);
 			}
 
 			_storage.Commit(parent);
