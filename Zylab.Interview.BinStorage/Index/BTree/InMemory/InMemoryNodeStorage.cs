@@ -64,9 +64,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 		public IndexDataKey NewKey(string key, IndexData data) {
 			return new IndexDataKey {
 				Key = key,
-				Offset = data.Offset,
-				Md5Hash = data.Md5Hash,
-				Size = data.Size
+				Data = data
 			};
 		}
 

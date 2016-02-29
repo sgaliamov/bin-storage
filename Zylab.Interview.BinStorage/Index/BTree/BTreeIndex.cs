@@ -49,7 +49,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 				var i = _storage.SearchPosition(parent, key, out found);
 
 				if(found != null) {
-					return found;
+					return found.Data;
 				}
 
 				if(_storage.IsLeaf(parent)) {
