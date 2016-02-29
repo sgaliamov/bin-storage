@@ -59,15 +59,14 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			}
 		}
 
-		private void Split(TNode parent, int position, TNode fullNode) {
+		private void Split(TNode parent, int positionToInsert, TNode fullNode) {
 			var newNode = _storage.NewNode();
 
-			var key = _storage.GetKey(fullNode, _storage.Degree - 1);
-			_storage.InsertKey(parent, position, key);
-			_storage.InsertChildren(parent, position + 1, newNode);
+			var midKey = _storage.GetKey(fullNode, _storage.Degree - 1);
+			_storage.InsertKey(parent, positionToInsert, midKey);
+			_storage.InsertChildren(parent, positionToInsert + 1, newNode);
 
 			_storage.MoveRightHalfKeys(newNode, fullNode);
-
 			if(!_storage.IsLeaf(fullNode)) {
 				_storage.MoveRightHalfChildrens(newNode, fullNode);
 			}
