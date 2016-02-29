@@ -11,8 +11,8 @@
 		}
 
 		public long Offset;
-		public long ChildrensPosition;
-		public long KeysPosition;
+		public int ChildrensPosition;
+		public int KeysPosition;
 
 		public long[] Childrens;
 		public KeyData[] Keys;

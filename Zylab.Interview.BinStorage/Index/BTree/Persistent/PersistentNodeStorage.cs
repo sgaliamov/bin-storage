@@ -11,14 +11,14 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		private const int PositionHolderSize = sizeof(long);
 		private const int DefaultDegre = 1024;
 		private const long DefaultCapacity = 0x400000; // 4 MB
+		private const int IndexDataSize = 16 + sizeof(long) + sizeof(long); // md5 hash + offset + size
 
 		private readonly long _capacity;
-		private readonly string _indexFilePath;
 		private readonly MemoryMappedFile _indexFile;
+		private readonly string _indexFilePath;
 		private readonly int _nodeSize;
 		private long _position;
 		private INode _root;
-		private int _indexDataSize;
 
 		public PersistentNodeStorage(string indexFilePath, long capacity = DefaultCapacity, int degree = DefaultDegre) {
 			Degree = degree;
@@ -39,7 +39,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			}
 
 			_nodeSize = degree * (sizeof(long) + Marshal.SizeOf(typeof(KeyData))); // childs + keys
-			_indexDataSize = 16 + sizeof(long) + sizeof(long); // md5 hash + offset + size
 		}
 
 		public void Dispose() {
@@ -57,17 +56,23 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void AddRangeChildrens(INode node, IEnumerable<INode> nodes) {
+			foreach(var item in nodes) {
+				AddChildren(node, item);
+			}
 		}
 
 		public void AddRangeKeys(INode node, IEnumerable<IKey> keys) {
-			throw new NotImplementedException();
+			var parentNode = (PersistentNode)node;
+			foreach(var key in keys) {
+				parentNode.Keys[parentNode.KeysPosition++] = (KeyData)key;
+			}
 		}
 
 		public void Commit(INode node) {
 			var persistentNode = (PersistentNode)node;
 
 			using(var accessor = _indexFile.CreateViewAccessor(persistentNode.Offset, _nodeSize)) {
-				accessor.WriteArray(0, persistentNode.Keys, 0, Degree);
+				accessor.WriteArray(0, persistentNode.Keys, 0, persistentNode.KeysPosition);
 				accessor.WriteArray(0, persistentNode.Childrens, 0, Degree);
 			}
 		}
@@ -122,22 +127,17 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public IKey NewKey(string key, IndexData data) {
-			using(var accessor = _indexFile.CreateViewAccessor(_position, _indexDataSize)) {
+			var newKey = new KeyData { Offset = _position };
+
+			using(var accessor = _indexFile.CreateViewAccessor(_position, IndexDataSize)) {
 				WriteKey(accessor, key);
 
-				//accessor.Write(_position, data.Offset);
-				//_position += sizeof(long);
+				accessor.Write(_position, ref data);
+				_position += IndexDataSize;
 			}
 
-			return new KeyData();
-		}
-
-		private void WriteKey(MemoryMappedViewAccessor accessor, string key) {
-			var keyBytes = Encoding.UTF8.GetBytes(key);
-			accessor.Write(_position, keyBytes.LongLength);
-			_position += sizeof(long);
-			accessor.WriteArray(_position, keyBytes, 0, keyBytes.Length);
-			_position += keyBytes.Length;
+			newKey.Size = _position = newKey.Offset;
+			return newKey;
 		}
 
 		public INode NewNode() {
@@ -164,6 +164,14 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public int Degree { get; }
+
+		private void WriteKey(MemoryMappedViewAccessor accessor, string key) {
+			var keyBytes = Encoding.UTF8.GetBytes(key);
+			accessor.Write(_position, keyBytes.LongLength);
+			_position += sizeof(long);
+			accessor.WriteArray(_position, keyBytes, 0, keyBytes.Length);
+			_position += keyBytes.Length;
+		}
 	}
 
 }
