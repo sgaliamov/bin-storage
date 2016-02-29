@@ -14,8 +14,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		private const int DefaultDegre = 1024;
 		private const long DefaultCapacity = 0x400000; // 4 MB
 		private const int IndexDataSize = 16 + sizeof(long) + sizeof(long); // md5 hash + offset + size
-		private readonly int _degree2;
 
+		private readonly int _degree2;
 		private readonly MemoryMappedFile _indexFile;
 		private readonly int _nodeSize;
 		private long _cursor;
@@ -137,7 +137,29 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public bool SearchPosition(PersistentNode node, string key, out IndexData found, out int position) {
-			throw new NotImplementedException();
+			//var lo = 0;
+			//var hi = node.KeysCount - 1;
+			//while(lo <= hi) {
+			//	var i = lo + ((hi - lo) >> 1);
+
+			//	var indexDataKey = node.Keys[i];
+			//	var c = string.Compare(indexDataKey.Key, key, StringComparison.OrdinalIgnoreCase);
+			//	if(c == 0) {
+			//		found = indexDataKey.Data;
+			//		position = i;
+			//		return true;
+			//	}
+			//	if(c < 0) {
+			//		lo = i + 1;
+			//	}
+			//	else {
+			//		hi = i - 1;
+			//	}
+			//}
+			position = 0;
+			// position = lo;
+			found = default(IndexData);
+			return false;
 		}
 
 		public void SetRoot(PersistentNode node) {
