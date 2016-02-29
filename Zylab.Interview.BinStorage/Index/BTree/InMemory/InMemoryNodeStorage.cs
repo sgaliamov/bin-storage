@@ -11,14 +11,16 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 		}
 
 		public void Dispose() {
+			// do nothing
 		}
 
 		public void AddChildren(InMemoryNode node, InMemoryNode children) {
 			node.Childrens.Add(children);
 		}
 
-		public void AddRangeChildrens(InMemoryNode node, IEnumerable<InMemoryNode> nodes) {
-			node.Childrens.AddRange(nodes);
+		public void AddRangeChildrens(InMemoryNode node, InMemoryNode source, int position, int count) {
+			var range = source.Childrens.GetRange(position, count);
+			node.Childrens.AddRange(range);
 		}
 
 		public void AddRangeKeys(InMemoryNode node, IEnumerable<IndexDataKey> keys) {
@@ -26,7 +28,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 		}
 
 		public void Commit(InMemoryNode node) {
-			// do nothing			
+			// do nothing
 		}
 
 		public int Compare(InMemoryNode parent, int keyIndex, string key) {
@@ -40,10 +42,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 
 		public IndexDataKey GetKey(InMemoryNode node, int position) {
 			return node.Keys[position];
-		}
-
-		public IEnumerable<InMemoryNode> GetRangeChildrens(InMemoryNode node, int index, int count) {
-			return node.Childrens.GetRange(index, count);
 		}
 
 		public IEnumerable<IndexDataKey> GetRangeKeys(InMemoryNode node, int index, int count) {
@@ -120,6 +118,9 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 		}
 
 		public int Degree { get; }
+
+		public void AddRangeChildrens(InMemoryNode node, IEnumerable<InMemoryNode> nodes) {
+		}
 	}
 
 }
