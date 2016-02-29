@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 
-namespace Zylab.Interview.BinStorage.Index {
+namespace Zylab.Interview.BinStorage.Index.RedBlackTree {
 
 	public class RedBlackTreeIndex : IIndex {
 		private readonly string _indexFilePath;

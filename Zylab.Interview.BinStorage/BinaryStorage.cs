@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Zylab.Interview.BinStorage.Index;
+using Zylab.Interview.BinStorage.Index.RedBlackTree;
 using Zylab.Interview.BinStorage.Storage;
 
 namespace Zylab.Interview.BinStorage {

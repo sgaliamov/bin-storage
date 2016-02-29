@@ -53,9 +53,15 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="RedBlackTreeIndexTests.cs" />
+    <Compile Include="Index\BTree\BTreeIndexTests.MultiThreading.cs" />
+    <Compile Include="Index\BTree\BTreeIndexTests.cs" />
+    <Compile Include="Index\IndexTests.cs" />
+    <Compile Include="Index\MultiThreadingTests.cs" />
+    <Compile Include="Index\RedBlackTree\RedBlackTreeIndexTests.MultiThreading.cs" />
+    <Compile Include="Index\RedBlackTree\RedBlackTreeIndexTests.cs" />
+    <Compile Include="Index\TestHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FileStorageTests.cs" />
+    <Compile Include="Storage\FileStorageTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Zylab.Interview.BinStorage\Zylab.Interview.BinStorage.csproj">
@@ -63,6 +69,7 @@
       <Name>Zylab.Interview.BinStorage</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
