@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Index.BTree;
+using Zylab.Interview.BinStorage.Index.BTree.InMemory;
 
 namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree {
 
@@ -9,10 +10,20 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree {
 	public class BTreeIndexMultiThreadingTests : MultiThreadingTests {
 		private const int TestDegree = 5;
 		private readonly TimeSpan _timeout = TimeSpan.FromSeconds(10);
+		private InMemoryNodeStorage _nodeStorage;
 
+		[TestInitialize]
+		public void TestInitialize() {
+			_nodeStorage = new InMemoryNodeStorage(TestDegree);
+		}
+
+		[TestCleanup]
+		public void TestCleanup() {
+			_nodeStorage.Dispose();
+		}
 
 		protected override IIndex Create() {
-			return new ThreadSafeIndex(new BTreeIndex(new MemoryNodeStorage(), TestDegree), _timeout);
+			return new ThreadSafeIndex(new BTreeIndex(_nodeStorage, TestDegree), _timeout);
 		}
 	}
 

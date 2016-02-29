@@ -57,10 +57,11 @@
     <Compile Include="BinaryStorage.cs" />
     <Compile Include="IBinaryStorage.cs" />
     <Compile Include="Index\BTree\BTreeIndex.cs" />
+    <Compile Include="Index\BTree\INode.cs" />
     <Compile Include="Index\BTree\INodeStorage.cs" />
     <Compile Include="Index\BTree\IndexDataKey.cs" />
-    <Compile Include="Index\BTree\Node.cs" />
-    <Compile Include="Index\BTree\MemoryNodeStorage.cs" />
+    <Compile Include="Index\BTree\InMemory\InMemoryNode.cs" />
+    <Compile Include="Index\BTree\InMemory\InMemoryNodeStorage.cs" />
     <Compile Include="Index\BTree\PersistentNodeStorage.cs" />
     <Compile Include="Index\RedBlackTree\RedBlackTreeIndex.cs" />
     <Compile Include="Index\IIndex.cs" />

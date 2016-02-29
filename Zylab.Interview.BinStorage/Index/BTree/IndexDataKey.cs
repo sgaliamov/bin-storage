@@ -10,7 +10,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public int CompareTo(IndexDataKey other) {
-			return string.Compare(Key, other.Key, StringComparison.InvariantCultureIgnoreCase);
+			return string.Compare(Key, other.Key, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public override string ToString() {

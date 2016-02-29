@@ -4,31 +4,30 @@ using System.Collections.Generic;
 namespace Zylab.Interview.BinStorage.Index.BTree {
 
 	public class BTreeIndex : IIndex {
-		private readonly INodeStorage _nodeStorage;
+		private readonly INodeStorage _storage;
 		private readonly int _t;
-		private Node _root;
 
-		public BTreeIndex(INodeStorage nodeStorage, int t) {
-			_nodeStorage = nodeStorage;
+		public BTreeIndex(INodeStorage storage, int t) {
+			_storage = storage;
 			_t = t;
-			_root = _nodeStorage.NewNode(_t);
 		}
 
 		public void Add(string key, IndexData indexData) {
-			if(!_root.IsFull) {
-				InsertNonFull(_root, key, indexData);
+			var root = _storage.GetRoot();
+			if(!root.IsFull) {
+				InsertNonFull(root, key, indexData);
 				return;
 			}
 
-			var oldRoot = _root;
-			_root = _nodeStorage.NewNode(_t);
-			_root.Childrens.Add(oldRoot);
-			Split(_root, 0, oldRoot);
-			InsertNonFull(_root, key, indexData);
+			var oldRoot = root;
+			root = _storage.NewNode();
+			root.AddChildren(oldRoot);
+			Split(root, 0, oldRoot);
+			InsertNonFull(root, key, indexData);
 		}
 
 		public IndexData Get(string key) {
-			var data = Search(_root, key);
+			var data = Search(_storage.GetRoot(), key);
 
 			if(data == null) {
 				throw new KeyNotFoundException($"The given key ({key}) was not present in the dictionary.");
@@ -38,17 +37,17 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public bool Contains(string key) {
-			return Search(_root, key) != null;
+			return Search(_storage.GetRoot(), key) != null;
 		}
 
 		public void Dispose() {
-			_nodeStorage.Dispose();
+			_storage.Dispose();
 		}
 
-		private static IndexData Search(Node parent, string key) {
+		private static IndexData Search(INode parent, string key) {
 			while(true) {
 				IndexDataKey found;
-				var i = BinarySearch(parent.Keys, key, out found);
+				var i = parent.SearchPosition(key, out found);
 
 				if(found != null) {
 					return found;
@@ -58,70 +57,49 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 					return null;
 				}
 
-				parent = parent.Childrens[i];
+				parent = parent.GetChildren(i);
 			}
 		}
 
-		private void Split(Node parent, int position, Node fullNode) {
-			var newNode = _nodeStorage.NewNode(_t);
+		private void Split(INode parent, int position, INode fullNode) {
+			var newNode = _storage.NewNode();
 
-			parent.Keys.Insert(position, fullNode.Keys[_t - 1]);
-			parent.Childrens.Insert(position + 1, newNode);
+			parent.InsertKey(position, fullNode.GetKey(_t - 1));
+			parent.InsertChildren(position + 1, newNode);
 
-			newNode.Keys.AddRange(fullNode.Keys.GetRange(_t, _t - 1));
+			newNode.AddRangeKeys(fullNode.GetRangeKeys(_t, _t - 1));
 
-			fullNode.Keys.RemoveRange(_t - 1, _t);
+			fullNode.RemoveRangeKeys(_t - 1, _t);
 
 			if(!fullNode.IsLeaf) {
-				newNode.Childrens.AddRange(fullNode.Childrens.GetRange(_t, _t));
-				fullNode.Childrens.RemoveRange(_t, _t);
+				newNode.AddRangeChildrens(fullNode.GetRangeChildrens(_t, _t));
+				fullNode.RemoveRangeChildrens(_t, _t);
 			}
 		}
 
-		private void InsertNonFull(Node parent, string key, IndexData data) {
+		private void InsertNonFull(INode parent, string key, IndexData data) {
 			while(true) {
 				IndexDataKey found;
-				var positionToInsert = BinarySearch(parent.Keys, key, out found);
+				var positionToInsert = parent.SearchPosition(key, out found);
 
 				if(parent.IsLeaf) {
-					parent.Keys.Insert(positionToInsert, _nodeStorage.NewKey(key, data));
+					parent.InsertKey(positionToInsert, _storage.NewKey(key, data));
 					return;
 				}
 
-				var child = parent.Childrens[positionToInsert];
+				var child = parent.GetChildren(positionToInsert);
 				if(child.IsFull) {
 					Split(parent, positionToInsert, child);
-					if(string.Compare(key, parent.Keys[positionToInsert].Key, StringComparison.OrdinalIgnoreCase) > 0) {
+					if(string.Compare(key, parent.GetKey(positionToInsert).Key, StringComparison.OrdinalIgnoreCase) > 0) {
 						positionToInsert++;
 					}
 				}
 
-				parent = parent.Childrens[positionToInsert];
+				parent = parent.GetChildren(positionToInsert);
 			}
 		}
 
-		private static int BinarySearch(IList<IndexDataKey> items, string key, out IndexDataKey found) {
-			var lo = 0;
-			var hi = items.Count - 1;
-			while(lo <= hi) {
-				var i = lo + ((hi - lo) >> 1);
-
-				var c = string.Compare(items[i].Key, key, StringComparison.OrdinalIgnoreCase);
-				if(c == 0) {
-					found = items[i];
-					return i;
-				}
-				if(c < 0) {
-					lo = i + 1;
-				}
-				else {
-					hi = i - 1;
-				}
-			}
-
-			found = null;
-			return lo;
-		}
+		
 	}
 
 }
