@@ -23,7 +23,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.InMemory {
 		}
 
 		protected override IIndex Create() {
-			return new ThreadSafeIndex(new BTreeIndex(_nodeStorage), _timeout);
+			return new ThreadSafeIndex(new BTreeIndex<InMemoryNode, IndexDataKey>(_nodeStorage), _timeout);
 		}
 	}
 

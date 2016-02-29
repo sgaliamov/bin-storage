@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
-	public class PersistentNodeStorage : INodeStorage {
+	public class PersistentNodeStorage : INodeStorage<PersistentNode, KeyData> {
 		private const int PositionHolderSize = sizeof(long);
 		private const int DefaultDegre = 1024;
 		private const long DefaultCapacity = 0x400000; // 4 MB
@@ -18,7 +18,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		private readonly string _indexFilePath;
 		private readonly int _nodeSize;
 		private long _position;
-		private INode _root;
+		private PersistentNode _root;
 
 		public PersistentNodeStorage(string indexFilePath, long capacity = DefaultCapacity, int degree = DefaultDegre) {
 			Degree = degree;
@@ -48,28 +48,25 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			_indexFile.Dispose();
 		}
 
-		public void AddChildren(INode node, INode children) {
-			var parentNode = (PersistentNode)node;
-			var childrenNode = (PersistentNode)children;
-
-			parentNode.Childrens[parentNode.ChildrensPosition++] = childrenNode.Offset;
+		public void AddChildren(PersistentNode node, PersistentNode children) {
+			node.Childrens[node.ChildrensPosition++] = children.Offset;
 		}
 
-		public void AddRangeChildrens(INode node, IEnumerable<INode> nodes) {
+		public void AddRangeChildrens(PersistentNode node, IEnumerable<PersistentNode> nodes) {
 			foreach(var item in nodes) {
 				AddChildren(node, item);
 			}
 		}
 
-		public void AddRangeKeys(INode node, IEnumerable<IKey> keys) {
-			var parentNode = (PersistentNode)node;
+		public void AddRangeKeys(PersistentNode node, IEnumerable<KeyData> keys) {
+			var parentNode = node;
 			foreach(var key in keys) {
-				parentNode.Keys[parentNode.KeysPosition++] = (KeyData)key;
+				parentNode.Keys[parentNode.KeysPosition++] = key;
 			}
 		}
 
-		public void Commit(INode node) {
-			var persistentNode = (PersistentNode)node;
+		public void Commit(PersistentNode node) {
+			var persistentNode = node;
 
 			using(var accessor = _indexFile.CreateViewAccessor(persistentNode.Offset, _nodeSize)) {
 				accessor.WriteArray(0, persistentNode.Keys, 0, persistentNode.KeysPosition);
@@ -77,12 +74,12 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			}
 		}
 
-		public int Compare(INode parent, int keyIndex, string key) {
+		public int Compare(PersistentNode parent, int keyIndex, string key) {
 			throw new NotImplementedException();
 		}
 
-		public INode GetChildren(INode node, int position) {
-			var persistentNode = (PersistentNode)node;
+		public PersistentNode GetChildren(PersistentNode node, int position) {
+			var persistentNode = node;
 			var offset = persistentNode.Childrens[position];
 
 			using(var accessor = _indexFile.CreateViewAccessor(offset, _nodeSize)) {
@@ -94,39 +91,39 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			}
 		}
 
-		public IKey GetKey(INode node, int position) {
+		public KeyData GetKey(PersistentNode node, int position) {
 			throw new NotImplementedException();
 		}
 
-		public IEnumerable<INode> GetRangeChildrens(INode node, int index, int count) {
+		public IEnumerable<PersistentNode> GetRangeChildrens(PersistentNode node, int index, int count) {
 			throw new NotImplementedException();
 		}
 
-		public IEnumerable<IKey> GetRangeKeys(INode node, int index, int count) {
+		public IEnumerable<KeyData> GetRangeKeys(PersistentNode node, int index, int count) {
 			throw new NotImplementedException();
 		}
 
-		public INode GetRoot() {
+		public PersistentNode GetRoot() {
 			return _root ?? (_root = NewNode());
 		}
 
-		public void InsertChildren(INode node, int position, INode children) {
+		public void InsertChildren(PersistentNode node, int position, PersistentNode children) {
 			throw new NotImplementedException();
 		}
 
-		public void InsertKey(INode node, int position, IKey key) {
+		public void InsertKey(PersistentNode node, int position, KeyData key) {
 			throw new NotImplementedException();
 		}
 
-		public bool IsFull(INode node) {
+		public bool IsFull(PersistentNode node) {
 			throw new NotImplementedException();
 		}
 
-		public bool IsLeaf(INode node) {
+		public bool IsLeaf(PersistentNode node) {
 			throw new NotImplementedException();
 		}
 
-		public IKey NewKey(string key, IndexData data) {
+		public KeyData NewKey(string key, IndexData data) {
 			var newKey = new KeyData { Offset = _position };
 
 			using(var accessor = _indexFile.CreateViewAccessor(_position, IndexDataSize)) {
@@ -140,26 +137,26 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			return newKey;
 		}
 
-		public INode NewNode() {
+		public PersistentNode NewNode() {
 			var node = new PersistentNode(_position, Degree);
 			_position += _nodeSize;
 
 			return node;
 		}
 
-		public void RemoveRangeChildrens(INode node, int index, int count) {
+		public void RemoveRangeChildrens(PersistentNode node, int index, int count) {
 			throw new NotImplementedException();
 		}
 
-		public void RemoveRangeKeys(INode node, int index, int count) {
+		public void RemoveRangeKeys(PersistentNode node, int index, int count) {
 			throw new NotImplementedException();
 		}
 
-		public bool SearchPosition(INode node, string key, out IndexData found, out int position) {
+		public bool SearchPosition(PersistentNode node, string key, out IndexData found, out int position) {
 			throw new NotImplementedException();
 		}
 
-		public void SetRoot(INode node) {
+		public void SetRoot(PersistentNode node) {
 			_root = node;
 		}
 

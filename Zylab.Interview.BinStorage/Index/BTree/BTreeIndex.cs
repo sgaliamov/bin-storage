@@ -2,10 +2,10 @@
 
 namespace Zylab.Interview.BinStorage.Index.BTree {
 
-	public class BTreeIndex : IIndex {
-		private readonly INodeStorage _storage;
+	public class BTreeIndex<TNode, TKey> : IIndex {
+		private readonly INodeStorage<TNode, TKey> _storage;
 
-		public BTreeIndex(INodeStorage storage) {
+		public BTreeIndex(INodeStorage<TNode, TKey> storage) {
 			_storage = storage;
 		}
 
@@ -42,7 +42,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			return data;
 		}
 
-		private bool Search(INode parent, string key, out IndexData found) {
+		private bool Search(TNode parent, string key, out IndexData found) {
 			while(true) {
 				int position;
 				var isFound = _storage.SearchPosition(parent, key, out found, out position);
@@ -59,18 +59,20 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			}
 		}
 
-		private void Split(INode parent, int position, INode fullNode) {
+		private void Split(TNode parent, int position, TNode fullNode) {
 			var newNode = _storage.NewNode();
 
-			_storage.InsertKey(parent, position, _storage.GetKey(fullNode, _storage.Degree - 1));
+			var key = _storage.GetKey(fullNode, _storage.Degree - 1);
+			_storage.InsertKey(parent, position, key);
 			_storage.InsertChildren(parent, position + 1, newNode);
 
-			_storage.AddRangeKeys(newNode, _storage.GetRangeKeys(fullNode, _storage.Degree, _storage.Degree - 1));
-
+			var rangeKeys = _storage.GetRangeKeys(fullNode, _storage.Degree, _storage.Degree - 1);
+			_storage.AddRangeKeys(newNode, rangeKeys);
 			_storage.RemoveRangeKeys(fullNode, _storage.Degree - 1, _storage.Degree);
 
 			if(!_storage.IsLeaf(fullNode)) {
-				_storage.AddRangeChildrens(newNode, _storage.GetRangeChildrens(fullNode, _storage.Degree, _storage.Degree));
+				var rangeChildrens = _storage.GetRangeChildrens(fullNode, _storage.Degree, _storage.Degree);
+				_storage.AddRangeChildrens(newNode, rangeChildrens);
 				_storage.RemoveRangeChildrens(fullNode, _storage.Degree, _storage.Degree);
 			}
 
@@ -79,7 +81,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			_storage.Commit(newNode);
 		}
 
-		private void InsertNonFull(INode parent, string key, IndexData data) {
+		private void InsertNonFull(TNode parent, string key, IndexData data) {
 			while(true) {
 				IndexData found;
 				int positionToInsert;

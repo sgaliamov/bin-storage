@@ -1,6 +1,6 @@
 ﻿namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
-	public struct PersistentNode : INode {
+	public class PersistentNode : INode {
 		public PersistentNode(long offset, int degree) {
 			var t2 = degree << 1;
 			Childrens = new long[t2];

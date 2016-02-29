@@ -3,31 +3,31 @@ using System.Collections.Generic;
 
 namespace Zylab.Interview.BinStorage.Index.BTree {
 
-	public interface INodeStorage : IDisposable {
+	public interface INodeStorage<TNode, TKey> : IDisposable {
 		int Degree { get; }
-		INode NewNode();
-		INode GetRoot();
-		void SetRoot(INode node);
-		bool IsFull(INode node);
-		bool IsLeaf(INode node);
-		bool SearchPosition(INode node, string key, out IndexData found, out int position);
-		int Compare(INode parent, int keyIndex, string key);
+		TNode NewNode();
+		TNode GetRoot();
+		void SetRoot(TNode node);
+		bool IsFull(TNode node);
+		bool IsLeaf(TNode node);
+		bool SearchPosition(TNode node, string key, out IndexData found, out int position);
+		int Compare(TNode parent, int keyIndex, string key);
 
-		IKey NewKey(string key, IndexData data);
-		void InsertKey(INode node, int position, IKey key);
-		IKey GetKey(INode node, int position);
-		void AddRangeKeys(INode node, IEnumerable<IKey> keys);
-		IEnumerable<IKey> GetRangeKeys(INode node, int index, int count);
-		void RemoveRangeKeys(INode node, int index, int count);
+		TKey NewKey(string key, IndexData data);
+		void InsertKey(TNode node, int position, TKey key);
+		TKey GetKey(TNode node, int position);
+		void AddRangeKeys(TNode node, IEnumerable<TKey> keys);
+		IEnumerable<TKey> GetRangeKeys(TNode node, int index, int count);
+		void RemoveRangeKeys(TNode node, int index, int count);
 
-		void AddChildren(INode node, INode children);
-		void InsertChildren(INode node, int position, INode children);
-		INode GetChildren(INode node, int position);
-		void AddRangeChildrens(INode node, IEnumerable<INode> nodes);
-		IEnumerable<INode> GetRangeChildrens(INode node, int index, int count);
-		void RemoveRangeChildrens(INode node, int index, int count);
+		void AddChildren(TNode node, TNode children);
+		void InsertChildren(TNode node, int position, TNode children);
+		TNode GetChildren(TNode node, int position);
+		void AddRangeChildrens(TNode node, IEnumerable<TNode> nodes);
+		IEnumerable<TNode> GetRangeChildrens(TNode node, int index, int count);
+		void RemoveRangeChildrens(TNode node, int index, int count);
 
-		void Commit(INode node);
+		void Commit(TNode node);
 	}
 
 }
