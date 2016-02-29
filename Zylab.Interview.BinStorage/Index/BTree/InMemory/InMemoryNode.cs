@@ -2,7 +2,7 @@
 
 namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 
-	public class InMemoryNode : INode {
+	public class InMemoryNode {
 		public InMemoryNode(int t) {
 			var t2 = t << 1;
 			Childrens = new List<InMemoryNode>(t2);
