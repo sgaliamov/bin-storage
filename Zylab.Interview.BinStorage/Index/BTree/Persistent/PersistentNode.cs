@@ -1,18 +1,21 @@
 ﻿namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 	public struct PersistentNode : INode {
-		public PersistentNode(int t) {
-			var t2 = t << 1;
+		public PersistentNode(long offset, int degree) {
+			var t2 = degree << 1;
 			Childrens = new long[t2];
-			Keys = new IKey[t2];
-			Offset = 0;
-			Size = 0;
+			Keys = new KeyData[t2];
+			Offset = offset;
+			ChildrensPosition = 0;
+			KeysPosition = 0;
 		}
 
 		public long Offset;
-		public long Size;
+		public long ChildrensPosition;
+		public long KeysPosition;
+
 		public long[] Childrens;
-		public IKey[] Keys;
+		public KeyData[] Keys;
 	}
 
 }
