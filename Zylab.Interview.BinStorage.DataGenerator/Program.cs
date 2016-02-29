@@ -20,7 +20,7 @@ namespace Zylab.Interview.BinStorage.DataGenerator {
 				.WithDegreeOfParallelism(4)
 				.ForAll(
 					i => {
-						using(var stream = File.Create(path + Guid.NewGuid().ToString())) {
+						using(var stream = File.Create(path + "\\" + Guid.NewGuid().ToString())) {
 							stream.Write(buffer, 0, buffer.Length);
 						}
 					});
