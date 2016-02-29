@@ -66,12 +66,10 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			_storage.InsertKey(parent, position, key);
 			_storage.InsertChildren(parent, position + 1, newNode);
 
-			var rangeKeys = _storage.GetRangeKeys(fullNode, _storage.Degree, _storage.Degree - 1);
-			_storage.AddRangeKeys(newNode, rangeKeys);
-			_storage.RemoveRangeKeys(fullNode, _storage.Degree - 1, _storage.Degree);
+			_storage.MoveRightHalfKeys(newNode, fullNode);
 
 			if(!_storage.IsLeaf(fullNode)) {
-				_storage.MoveChildrens(newNode, fullNode, _storage.Degree, _storage.Degree);
+				_storage.MoveRightHalfChildrens(newNode, fullNode);
 			}
 
 			_storage.Commit(parent);
@@ -86,7 +84,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 				_storage.SearchPosition(parent, key, out found, out positionToInsert);
 
 				if(_storage.IsLeaf(parent)) {
-					_storage.InsertKey(parent, positionToInsert, _storage.NewKey(key, data));
+					var newKey = _storage.NewKey(key, data);
+					_storage.InsertKey(parent, positionToInsert, newKey);
 					_storage.Commit(parent);
 					return;
 				}

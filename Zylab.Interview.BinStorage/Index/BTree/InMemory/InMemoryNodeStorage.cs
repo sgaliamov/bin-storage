@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 
@@ -18,17 +17,12 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			node.Childrens.Add(children);
 		}
 
-		public void AddRangeKeys(InMemoryNode node, IEnumerable<IndexDataKey> keys) {
-			node.Keys.AddRange(keys);
-		}
-
 		public void Commit(InMemoryNode node) {
 			// do nothing
 		}
 
-		public int Compare(InMemoryNode parent, int keyIndex, string key) {
-			var indexDataKey = GetKey(parent, keyIndex);
-			return string.Compare(key, indexDataKey.Key, StringComparison.OrdinalIgnoreCase);
+		public int Compare(InMemoryNode node, int keyIndex, string key) {
+			return string.Compare(key, node.Keys[keyIndex].Key, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public InMemoryNode GetChildren(InMemoryNode node, int position) {
@@ -37,10 +31,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 
 		public IndexDataKey GetKey(InMemoryNode node, int position) {
 			return node.Keys[position];
-		}
-
-		public IEnumerable<IndexDataKey> GetRangeKeys(InMemoryNode node, int index, int count) {
-			return node.Keys.GetRange(index, count);
 		}
 
 		public InMemoryNode GetRoot() {
@@ -63,10 +53,16 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			return node.Childrens.Count == 0;
 		}
 
-		public void MoveChildrens(InMemoryNode node, InMemoryNode source, int position, int count) {
-			var range = source.Childrens.GetRange(position, count);
+		public void MoveRightHalfChildrens(InMemoryNode node, InMemoryNode source) {
+			var range = source.Childrens.GetRange(Degree, Degree);
 			node.Childrens.AddRange(range);
-			source.Childrens.RemoveRange(position, count);
+			source.Childrens.RemoveRange(Degree, Degree);
+		}
+
+		public void MoveRightHalfKeys(InMemoryNode node, InMemoryNode source) {
+			var rangeKeys = source.Keys.GetRange(Degree, Degree - 1);
+			node.Keys.AddRange(rangeKeys);
+			source.Keys.RemoveRange(Degree - 1, Degree);
 		}
 
 		public IndexDataKey NewKey(string key, IndexData data) {
@@ -78,10 +74,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 
 		public InMemoryNode NewNode() {
 			return new InMemoryNode(Degree);
-		}
-
-		public void RemoveRangeKeys(InMemoryNode node, int index, int count) {
-			node.Keys.RemoveRange(index, count);
 		}
 
 		public bool SearchPosition(InMemoryNode node, string key, out IndexData found, out int position) {
@@ -115,9 +107,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 		}
 
 		public int Degree { get; }
-
-		public void AddRangeChildrens(InMemoryNode node, IEnumerable<InMemoryNode> nodes) {
-		}
 	}
 
 }

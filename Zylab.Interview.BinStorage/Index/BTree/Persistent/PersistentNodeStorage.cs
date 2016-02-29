@@ -11,7 +11,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 	public class PersistentNodeStorage : INodeStorage<PersistentNode, KeyData> {
 		private const int PositionHolderSize = sizeof(long);
 		private const int RootHolderOffset = PositionHolderSize;
-		private const int RootHolderOffsetSize = sizeof(long);
+		private const int RootHolderSize = sizeof(long);
 		private const int DefaultDegre = 1024;
 		private const long DefaultCapacity = 0x400000; // 4 MB
 		private const int IndexDataSize = 16 + sizeof(long) + sizeof(long); // md5 hash + offset + size
@@ -37,7 +37,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			using(var accessor = _indexFile.CreateViewAccessor(0, PositionHolderSize)) {
 				_position = accessor.ReadInt64(0);
 				if(_position == 0) {
-					_position = PositionHolderSize + RootHolderOffsetSize;
+					_position = PositionHolderSize + RootHolderSize;
 				}
 			}
 
@@ -55,12 +55,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			node.Childrens[node.ChildrensPosition++] = children.Offset;
 		}
 
-		public void AddRangeKeys(PersistentNode node, IEnumerable<KeyData> keys) {
-			foreach(var key in keys) {
-				node.Keys[node.KeysPosition++] = key;
-			}
-		}
-
 		public void Commit(PersistentNode node) {
 			using(var writer = _indexFile.CreateViewStream(node.Offset, _nodeSize)) {
 				var formatter = new BinaryFormatter();
@@ -68,7 +62,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			}
 		}
 
-		public int Compare(PersistentNode parent, int keyIndex, string key) {
+		public int Compare(PersistentNode node, int keyIndex, string key) {
 			throw new NotImplementedException();
 		}
 
@@ -86,10 +80,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 		public KeyData GetKey(PersistentNode node, int position) {
 			return node.Keys[position];
-		}
-
-		public IEnumerable<KeyData> GetRangeKeys(PersistentNode node, int index, int count) {
-			throw new NotImplementedException();
 		}
 
 		public PersistentNode GetRoot() {
@@ -112,12 +102,16 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			return node.ChildrensPosition == 0;
 		}
 
-		public void MoveChildrens(PersistentNode node, PersistentNode source, int position, int count) {
-			for(var i = position; i < position + count; i++) {
+		public void MoveRightHalfChildrens(PersistentNode node, PersistentNode source) {
+			for(var i = Degree; i < Degree + Degree; i++) {
 				node.Childrens[node.ChildrensPosition++] = source.Childrens[i];
 				source.Childrens[i] = 0;
 			}
-			source.ChildrensPosition = position - 1;
+			source.ChildrensPosition = Degree - 1;
+		}
+
+		public void MoveRightHalfKeys(PersistentNode node, PersistentNode source) {
+			throw new NotImplementedException();
 		}
 
 		public KeyData NewKey(string key, IndexData data) {
@@ -139,10 +133,6 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			_position += _nodeSize;
 
 			return node;
-		}
-
-		public void RemoveRangeKeys(PersistentNode node, int index, int count) {
-			throw new NotImplementedException();
 		}
 
 		public bool SearchPosition(PersistentNode node, string key, out IndexData found, out int position) {
