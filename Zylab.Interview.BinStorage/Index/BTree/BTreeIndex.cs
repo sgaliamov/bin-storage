@@ -16,7 +16,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 
 		public void Add(string key, IndexData indexData) {
 			var root = _storage.GetRoot();
-			if(!root.IsFull) {
+			if(!_storage.IsFull(root)) {
 				InsertNonFull(root, key, indexData);
 				return;
 			}
@@ -24,7 +24,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			var oldRoot = root;
 			root = _storage.NewNode();
 			_storage.SetRoot(root);
-			root.AddChildren(oldRoot);
+			_storage.AddChildren(root, oldRoot);
 			Split(root, 0, oldRoot);
 			InsertNonFull(root, key, indexData);
 		}
@@ -43,58 +43,58 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 			return data;
 		}
 
-		private static IndexData Search(INode parent, string key) {
+		private IndexData Search(INode parent, string key) {
 			while(true) {
 				IndexDataKey found;
-				var i = parent.SearchPosition(key, out found);
+				var i = _storage.SearchPosition(parent, key, out found);
 
 				if(found != null) {
 					return found;
 				}
 
-				if(parent.IsLeaf) {
+				if(_storage.IsLeaf(parent)) {
 					return null;
 				}
 
-				parent = parent.GetChildren(i);
+				parent = _storage.GetChildren(parent, i);
 			}
 		}
 
 		private void Split(INode parent, int position, INode fullNode) {
 			var newNode = _storage.NewNode();
 
-			parent.InsertKey(position, fullNode.GetKey(_storage.Degree - 1));
-			parent.InsertChildren(position + 1, newNode);
+			_storage.InsertKey(parent, position, _storage.GetKey(fullNode, _storage.Degree - 1));
+			_storage.InsertChildren(parent, position + 1, newNode);
 
-			newNode.AddRangeKeys(fullNode.GetRangeKeys(_storage.Degree, _storage.Degree - 1));
+			_storage.AddRangeKeys(newNode, _storage.GetRangeKeys(fullNode, _storage.Degree, _storage.Degree - 1));
 
-			fullNode.RemoveRangeKeys(_storage.Degree - 1, _storage.Degree);
+			_storage.RemoveRangeKeys(fullNode, _storage.Degree - 1, _storage.Degree);
 
-			if(!fullNode.IsLeaf) {
-				newNode.AddRangeChildrens(fullNode.GetRangeChildrens(_storage.Degree, _storage.Degree));
-				fullNode.RemoveRangeChildrens(_storage.Degree, _storage.Degree);
+			if(!_storage.IsLeaf(fullNode)) {
+				_storage.AddRangeChildrens(newNode, _storage.GetRangeChildrens(fullNode, _storage.Degree, _storage.Degree));
+				_storage.RemoveRangeChildrens(fullNode, _storage.Degree, _storage.Degree);
 			}
 		}
 
 		private void InsertNonFull(INode parent, string key, IndexData data) {
 			while(true) {
 				IndexDataKey found;
-				var positionToInsert = parent.SearchPosition(key, out found);
+				var positionToInsert = _storage.SearchPosition(parent, key, out found);
 
-				if(parent.IsLeaf) {
-					parent.InsertKey(positionToInsert, _storage.NewKey(key, data));
+				if(_storage.IsLeaf(parent)) {
+					_storage.InsertKey(parent, positionToInsert, _storage.NewKey(key, data));
 					return;
 				}
 
-				var child = parent.GetChildren(positionToInsert);
-				if(child.IsFull) {
+				var child = _storage.GetChildren(parent, positionToInsert);
+				if(_storage.IsFull(child)) {
 					Split(parent, positionToInsert, child);
-					if(string.Compare(key, parent.GetKey(positionToInsert).Key, StringComparison.OrdinalIgnoreCase) > 0) {
+					if(string.Compare(key, _storage.GetKey(parent, positionToInsert).Key, StringComparison.OrdinalIgnoreCase) > 0) {
 						positionToInsert++;
 					}
 				}
 
-				parent = parent.GetChildren(positionToInsert);
+				parent = _storage.GetChildren(parent, positionToInsert);
 			}
 		}
 	}
