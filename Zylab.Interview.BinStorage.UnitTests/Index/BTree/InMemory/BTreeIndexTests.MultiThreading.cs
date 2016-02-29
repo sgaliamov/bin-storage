@@ -4,7 +4,7 @@ using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Index.BTree;
 using Zylab.Interview.BinStorage.Index.BTree.InMemory;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree {
+namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.InMemory {
 
 	[TestClass]
 	public class BTreeIndexMultiThreadingTests : MultiThreadingTests {

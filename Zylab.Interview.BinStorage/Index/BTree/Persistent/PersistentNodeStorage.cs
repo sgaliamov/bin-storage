@@ -1,0 +1,117 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.MemoryMappedFiles;
+
+namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
+
+	public class PersistentNodeStorage : INodeStorage {
+		private readonly long _capacity;
+		private readonly string _indexFilePath;
+		private readonly MemoryMappedFile _mappedFile;
+		private INode _root;
+
+		public PersistentNodeStorage(string indexFilePath, long capacity, int degree = 1024) {
+			Degree = degree;
+			_indexFilePath = indexFilePath;
+			_capacity = capacity;
+			_mappedFile = MemoryMappedFile.CreateFromFile(
+				_indexFilePath,
+				FileMode.OpenOrCreate,
+				null,
+				_capacity,
+				MemoryMappedFileAccess.ReadWrite);
+		}
+
+
+		public void Dispose() {
+			throw new NotImplementedException();
+		}
+
+		public void AddChildren(INode node, INode children) {
+			throw new NotImplementedException();
+		}
+
+		public void AddRangeChildrens(INode node, IEnumerable<INode> nodes) {
+			throw new NotImplementedException();
+		}
+
+		public void AddRangeKeys(INode node, IEnumerable<IndexDataKey> keys) {
+			throw new NotImplementedException();
+		}
+
+		public void Commit(INode node) {
+			var persistentNode = (PersistentNode)node;
+
+			// _mappedFile.CreateViewAccessor(persistentNode.Offset)
+		}
+
+		public INode GetChildren(INode node, int position) {
+			var persistentNode = (PersistentNode)node;
+			using(var accessor = _mappedFile.CreateViewAccessor(persistentNode.Offset, 100)) {
+				PersistentNode childred;
+				accessor.Read(0, out childred);
+				return childred;
+			}
+		}
+
+		public IndexDataKey GetKey(INode node, int position) {
+			throw new NotImplementedException();
+		}
+
+		public IEnumerable<INode> GetRangeChildrens(INode node, int index, int count) {
+			throw new NotImplementedException();
+		}
+
+		public IEnumerable<IndexDataKey> GetRangeKeys(INode node, int index, int count) {
+			throw new NotImplementedException();
+		}
+
+		public INode GetRoot() {
+			return _root ?? (_root = NewNode());
+		}
+
+		public void InsertChildren(INode node, int position, INode children) {
+			throw new NotImplementedException();
+		}
+
+		public void InsertKey(INode node, int position, IndexDataKey key) {
+			throw new NotImplementedException();
+		}
+
+		public bool IsFull(INode node) {
+			throw new NotImplementedException();
+		}
+
+		public bool IsLeaf(INode node) {
+			throw new NotImplementedException();
+		}
+
+		public IndexDataKey NewKey(string key, IndexData data) {
+			throw new NotImplementedException();
+		}
+
+		public INode NewNode() {
+			return new PersistentNode();
+		}
+
+		public void RemoveRangeChildrens(INode node, int index, int count) {
+			throw new NotImplementedException();
+		}
+
+		public void RemoveRangeKeys(INode node, int index, int count) {
+			throw new NotImplementedException();
+		}
+
+		public int SearchPosition(INode node, string key, out IndexDataKey found) {
+			throw new NotImplementedException();
+		}
+
+		public void SetRoot(INode node) {
+			_root = node;
+		}
+
+		public int Degree { get; }
+	}
+
+}

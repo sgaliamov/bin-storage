@@ -62,7 +62,8 @@
     <Compile Include="Index\BTree\IndexDataKey.cs" />
     <Compile Include="Index\BTree\InMemory\InMemoryNode.cs" />
     <Compile Include="Index\BTree\InMemory\InMemoryNodeStorage.cs" />
-    <Compile Include="Index\BTree\PersistentNodeStorage.cs" />
+    <Compile Include="Index\BTree\Persistent\PersistentNode.cs" />
+    <Compile Include="Index\BTree\Persistent\PersistentNodeStorage.cs" />
     <Compile Include="Index\RedBlackTree\RedBlackTreeIndex.cs" />
     <Compile Include="Index\IIndex.cs" />
     <Compile Include="Index\IndexData.cs" />
