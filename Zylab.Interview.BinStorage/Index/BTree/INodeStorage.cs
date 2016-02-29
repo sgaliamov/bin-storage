@@ -26,6 +26,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		void AddRangeChildrens(INode node, IEnumerable<INode> nodes);
 		IEnumerable<INode> GetRangeChildrens(INode node, int index, int count);
 		void RemoveRangeChildrens(INode node, int index, int count);
+
+		void Commit(INode node);
 	}
 
 }

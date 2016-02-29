@@ -78,6 +78,10 @@ namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 			((InMemoryNode)node).Childrens.RemoveRange(index, count);
 		}
 
+		public void Commit(INode node) {
+			// do nothing			
+		}
+
 		public void RemoveRangeKeys(INode node, int index, int count) {
 			((InMemoryNode)node).Keys.RemoveRange(index, count);
 		}

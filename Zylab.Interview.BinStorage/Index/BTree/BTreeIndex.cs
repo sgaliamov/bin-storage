@@ -74,6 +74,10 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 				_storage.AddRangeChildrens(newNode, _storage.GetRangeChildrens(fullNode, _storage.Degree, _storage.Degree));
 				_storage.RemoveRangeChildrens(fullNode, _storage.Degree, _storage.Degree);
 			}
+
+			_storage.Commit(parent);
+			_storage.Commit(fullNode);
+			_storage.Commit(newNode);
 		}
 
 		private void InsertNonFull(INode parent, string key, IndexData data) {
@@ -83,6 +87,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 
 				if(_storage.IsLeaf(parent)) {
 					_storage.InsertKey(parent, positionToInsert, _storage.NewKey(key, data));
+					_storage.Commit(parent);
 					return;
 				}
 
