@@ -1,12 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Storage;
@@ -194,40 +192,31 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 		}
 
 		[TestMethod]
-		public void ParallelMemoryMappedFile_Test() {
-			var ints = Enumerable.Range(0, 10).Select(x => x.ToString()).ToArray();
-			var pos = 0;
-			using(var mmf = MemoryMappedFile.CreateFromFile(_storageFilePath, FileMode.OpenOrCreate, null, 10)) {
-				ints.AsParallel()
-					.WithDegreeOfParallelism(4)
-					.ForAll(
-						x => {
-							var buffer = Encoding.UTF8.GetBytes(x);
-							// ReSharper disable once AccessToModifiedClosure
-							var p = Interlocked.Add(ref pos, buffer.Length) - buffer.Length;
-							// ReSharper disable once AccessToDisposedClosure
-							using(var stream = mmf.CreateViewStream(p, buffer.Length)) {
-								stream.Write(buffer, 0, buffer.Length);
-							}
-						});
+		public void Parallel_Test() {
+			var dictionary = Enumerable.Range(0, 100).ToDictionary(x => x, x => Guid.NewGuid().ToByteArray());
+			var indexes = new ConcurrentDictionary<int, IndexData>();
+
+			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
+				dictionary.AsParallel().ForAll(
+					pair => {
+						// ReSharper disable once AccessToDisposedClosure
+						var indexData = target.Append(new MemoryStream(pair.Value));
+						indexes.TryAdd(pair.Key, indexData);
+					});
 			}
 
-			var actual = new string[ints.Length];
-			using(var mmf = MemoryMappedFile.CreateFromFile(_storageFilePath, FileMode.Open, null, 10)) {
-				Enumerable.Range(0, 10)
-					.AsParallel()
-					.WithDegreeOfParallelism(4)
-					.ForAll(
-						x => {
-							var buffer = new byte[1];
-							// ReSharper disable once AccessToDisposedClosure
-							using(var stream = mmf.CreateViewStream(x, buffer.Length)) {
-								stream.Read(buffer, 0, buffer.Length);
-								actual[x] = Encoding.UTF8.GetString(buffer);
-							}
-						});
+			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
+				indexes.AsParallel().ForAll(
+					pair => {
+						// ReSharper disable once AccessToDisposedClosure
+						using(var stream = target.Get(pair.Value)) {
+							var ms = new MemoryStream();
+							stream.CopyTo(ms);
+							var buffer = ms.ToArray();
 
-				Assert.IsTrue(ints.SequenceEqual(actual.OrderBy(x => x)));
+							Assert.IsTrue(buffer.SequenceEqual(dictionary[pair.Key]));
+						}
+					});
 			}
 		}
 
