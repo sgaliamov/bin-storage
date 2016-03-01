@@ -8,15 +8,15 @@ using Zylab.Interview.BinStorage.Index;
 namespace Zylab.Interview.BinStorage.Storage {
 
 	public class FileStorage : IStorage {
-		private const int DefaultReadBufferSize = 0x2800; // 10 KB
-		private const long DefaultCapacity = 0x40000000; // 1 GB
-		private const int PositionHolderSize = sizeof(long);
+		private const int DefaultReadBufferSize = Constants.Size4Kb;
+		private const long DefaultCapacity = Constants.Size1Gb;
+		private const int CursorHolderSize = sizeof(long);
 
 		private readonly int _readBufferSize;
 		private readonly string _storageFilePath;
 		private long _capacity;
 		private MemoryMappedFile _mappedFile;
-		private long _position;
+		private long _cursor;
 		private MemoryMappedViewAccessor _positionHolder;
 		private MemoryMappedViewStream _writer;
 
@@ -26,17 +26,17 @@ namespace Zylab.Interview.BinStorage.Storage {
 			int readBufferSize = DefaultReadBufferSize) {
 			_storageFilePath = storageFilePath;
 			_readBufferSize = readBufferSize;
-			_capacity = capacity + PositionHolderSize;
+			_capacity = capacity + CursorHolderSize;
 
 			InitFile();
 		}
 
 		public IndexData Append(Stream data) {
 			var indexData = new IndexData {
-				Offset = _position
+				Offset = _cursor
 			};
 
-			// todo: if input stream is seekable, calculate new _position to allow other threads write new data,
+			// todo: if input stream is seekable, calculate new _cursor to allow other threads write new data,
 			// todo: write nonseekable input stream to separate queue and join it when finish
 			var buffer = new byte[_readBufferSize];
 			var count = data.Read(buffer, 0, _readBufferSize);
@@ -57,11 +57,11 @@ namespace Zylab.Interview.BinStorage.Storage {
 						break;
 					}
 				} while(true);
-				_positionHolder.Write(0, _position);
+				_positionHolder.Write(0, _cursor);
 
 				indexData.Md5Hash = hashAlgorithm.Hash;
 			}
-			indexData.Size = _position - indexData.Offset;
+			indexData.Size = _cursor - indexData.Offset;
 
 			return indexData;
 		}
@@ -80,19 +80,19 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		private void Write(byte[] buffer, int count) {
-			if(_position + count > _capacity) {
+			if(_cursor + count > _capacity) {
 				DisposeFile();
 				_capacity <<= 1;
 				InitFile();
 			}
 			
 			_writer.Write(buffer, 0, count);
-			_position += count;
+			_cursor += count;
 		}
 
 		private void InitFile() {
 			long fileLength;
-			_position = ReadPosition(out fileLength);
+			_cursor = ReadPosition(out fileLength);
 			if(_capacity < fileLength) {
 				_capacity = fileLength;
 			}
@@ -104,18 +104,18 @@ namespace Zylab.Interview.BinStorage.Storage {
 				_capacity,
 				MemoryMappedFileAccess.ReadWrite);
 
-			_positionHolder = _mappedFile.CreateViewAccessor(0, PositionHolderSize);
-			if(_position == 0) {
-				_position = PositionHolderSize;
-				_positionHolder.Write(0, _position);
+			_positionHolder = _mappedFile.CreateViewAccessor(0, CursorHolderSize);
+			if(_cursor == 0) {
+				_cursor = CursorHolderSize;
+				_positionHolder.Write(0, _cursor);
 			}
-			_writer = _mappedFile.CreateViewStream(_position, _capacity - _position); // todo: read by parts
+			_writer = _mappedFile.CreateViewStream(_cursor, _capacity - _cursor); // todo: read by parts
 		}
 
 		private long ReadPosition(out long fileLength) {
 			using(var file = File.Open(_storageFilePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.None)) {
-				var buffer = new byte[PositionHolderSize];
-				file.Read(buffer, 0, PositionHolderSize);
+				var buffer = new byte[CursorHolderSize];
+				file.Read(buffer, 0, CursorHolderSize);
 				fileLength = file.Length;
 
 				return BitConverter.ToInt64(buffer, 0);

@@ -10,6 +10,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 	[TestClass]
 	public class PersistentBTreeIndexMultiThreadingTests : MultiThreadingTests {
 		private const int TestDegree = 4;
+		private const int TestCapacity = Constants.Size4Kb;
 		private readonly TimeSpan _timeout = TimeSpan.FromSeconds(10);
 		private string _indexFilePath;
 
@@ -26,7 +27,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 		protected override IIndex Create() {
 			return
 				new ThreadSafeIndex(
-					new BTreeIndex<PersistentNode, KeyInfo>(new PersistentNodeStorage(_indexFilePath, degree: TestDegree)),
+					new BTreeIndex<PersistentNode, KeyInfo>(new PersistentNodeStorage(_indexFilePath, TestCapacity, TestDegree)),
 					_timeout);
 		}
 	}

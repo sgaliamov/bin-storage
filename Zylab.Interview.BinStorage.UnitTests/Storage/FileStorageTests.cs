@@ -15,7 +15,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 
 	[TestClass]
 	public class FileStorageTests {
-		private const int TestCapacity = 0x400; // 1KB
+		private const int TestCapacity = Constants.Size1Kb;
 		private const int PositionHolderSize = sizeof(long);
 		private const int SizeOfGuid = 16;
 		private string _storageFilePath;

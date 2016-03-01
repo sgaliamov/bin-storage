@@ -3,6 +3,7 @@
 	public class Sizes {
 		public const int Md5HashSize = 16;
 		public const int IndexDataSize = Md5HashSize + sizeof(long) + sizeof(long);
+		public const int CursorHolderOffset = 0;
 		public const int CursorHolderSize = sizeof(long);
 		public const long RootHolderOffset = CursorHolderSize;
 		public const int RootHolderSize = sizeof(long);

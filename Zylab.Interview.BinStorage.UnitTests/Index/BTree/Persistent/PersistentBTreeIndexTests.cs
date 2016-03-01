@@ -9,6 +9,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 	[TestClass]
 	public class PersistentBTreeIndexTests : IndexTests {
 		private const int TestDegree = 5;
+		private const int TestCapacity = Constants.Size1Kb;
 		private string _indexFilePath;
 
 		[TestInitialize]
@@ -22,7 +23,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 		}
 
 		protected override IIndex Create() {
-			return new BTreeIndex<PersistentNode, KeyInfo>(new PersistentNodeStorage(_indexFilePath, degree: TestDegree));
+			return new BTreeIndex<PersistentNode, KeyInfo>(new PersistentNodeStorage(_indexFilePath, TestCapacity, TestDegree));
 		}
 	}
 
