@@ -94,10 +94,12 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 					Split(parent, positionToInsert, child);
 					if(_storage.Compare(parent, positionToInsert, key) > 0) {
 						positionToInsert++;
+						parent = _storage.GetChildren(parent, positionToInsert);
+						continue;
 					}
 				}
 
-				parent = _storage.GetChildren(parent, positionToInsert);
+				parent = child;
 			}
 		}
 	}
