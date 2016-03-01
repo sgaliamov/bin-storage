@@ -41,7 +41,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 			}
 
 			// todo: write nonseekable input stream to separate queue and join it when finish
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		public Stream Get(IndexData indexData) {
@@ -51,7 +51,13 @@ namespace Zylab.Interview.BinStorage.Storage {
 				return Stream.Null;
 			}
 
-			return _file.CreateViewStream(indexData.Offset, indexData.Size, MemoryMappedFileAccess.Read);
+			try {
+				_lock.EnterReadLock();
+				return new FakeStream(_file, indexData.Offset, indexData.Size);
+			}
+			finally {
+				_lock.ExitReadLock();
+			}
 		}
 
 		private IndexData AppendSeekableStream(Stream input) {
@@ -107,10 +113,14 @@ namespace Zylab.Interview.BinStorage.Storage {
 				_lock.EnterWriteLock();
 
 				CheckSpace(cursor, length);
-				if(cursor + length <= _capacity) return;
+				var required = cursor + length;
+				if(required <= _capacity) return;
 
 				ReleaseFile();
 				_capacity <<= 1;
+				if(required > _capacity) {
+					_capacity = required;
+				}
 				InitFile();
 			}
 			finally {

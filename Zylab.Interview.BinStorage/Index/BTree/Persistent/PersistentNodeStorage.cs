@@ -228,10 +228,14 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		private void EnsureCapacity(long cursor, int sizeToWrite) {
-			if(cursor + sizeToWrite <= _capacity) return;
+			var required = cursor + sizeToWrite;
+			if(required <= _capacity) return;
 
 			ReleaseFile();
 			_capacity <<= 1;
+			if(required > _capacity) {
+				_capacity = required;
+			}
 			InitFile();
 		}
 
