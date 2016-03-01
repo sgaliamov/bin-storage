@@ -268,6 +268,24 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 				});
 		}
 
+		[TestMethod]
+		public void Capacity_Test() {
+			var sizes = new Sizes(TestDegree);
+			var capacity = 2 * sizes.NodeSize + Sizes.CursorHolderSize + Sizes.RootHolderSize;
+
+			using(var target = new PersistentNodeStorage(_indexFilePath, capacity, TestDegree)) {
+				var root = target.GetRoot();
+
+				for(var i = 0; i < TestDegree * 2; i++) {
+					var children = target.NewNode();
+					target.AddChildren(root, children);
+					target.Commit(children);
+				}
+
+				target.Commit(root);
+			}			
+		}
+
 		private static void Check(PersistentNode expected, PersistentNode actual) {
 			Assert.AreEqual(expected.ChildrensCount, actual.ChildrensCount);
 			Assert.AreEqual(expected.KeysCount, actual.KeysCount);
