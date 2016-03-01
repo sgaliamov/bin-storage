@@ -193,11 +193,14 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 
 		[TestMethod]
 		public void Parallel_Test() {
-			var dictionary = Enumerable.Range(0, 100).ToDictionary(x => x, x => Guid.NewGuid().ToByteArray());
+			var dictionary = Enumerable.Range(0, 10000).ToDictionary(x => x, x => Guid.NewGuid().ToByteArray());
 			var indexes = new ConcurrentDictionary<int, IndexData>();
+			const int degreeOfParallelism = 4;
 
 			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
-				dictionary.AsParallel().ForAll(
+				dictionary.AsParallel()
+					.WithDegreeOfParallelism(degreeOfParallelism)
+					.ForAll(
 					pair => {
 						// ReSharper disable once AccessToDisposedClosure
 						var indexData = target.Append(new MemoryStream(pair.Value));
@@ -206,7 +209,9 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 			}
 
 			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
-				indexes.AsParallel().ForAll(
+				indexes.AsParallel()
+					.WithDegreeOfParallelism(degreeOfParallelism)
+					.ForAll(
 					pair => {
 						// ReSharper disable once AccessToDisposedClosure
 						using(var stream = target.Get(pair.Value)) {

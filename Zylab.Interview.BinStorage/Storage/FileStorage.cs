@@ -12,13 +12,14 @@ namespace Zylab.Interview.BinStorage.Storage {
 		private const long DefaultCapacity = Constants.Size1Gb;
 		private const int CursorHolderSize = sizeof(long);
 
+		private readonly object _lock = new object();
+
 		private readonly int _readBufferSize;
 		private readonly string _storageFilePath;
 		private long _capacity;
 		private long _cursor;
-		private MemoryMappedFile _mappedFile;
-		private MemoryMappedViewAccessor _positionHolder;
-		private MemoryMappedViewStream _writer;
+		private MemoryMappedViewAccessor _cursorHolder;
+		private MemoryMappedFile _file;
 
 		public FileStorage(
 			string storageFilePath,
@@ -31,24 +32,49 @@ namespace Zylab.Interview.BinStorage.Storage {
 			InitFile();
 		}
 
-		public IndexData Append(Stream data) {
+		public IndexData Append(Stream input) {
 			CheckDisposed();
 
+			if(input.CanSeek) {
+				return AppendSeekableStream(input);
+			}
+
+			throw new NotImplementedException();
+		}
+
+		public Stream Get(IndexData indexData) {
+			CheckDisposed();
+
+			if(indexData.Size == 0) {
+				return Stream.Null;
+			}
+
+			return _file.CreateViewStream(indexData.Offset, indexData.Size);
+		}
+
+		private IndexData AppendSeekableStream(Stream input) {
+			var length = input.Length;
+			var cursor = Interlocked.Add(ref _cursor, length) - length;
+			EnsureCapacity(length);
+
 			var indexData = new IndexData {
-				Offset = _cursor
+				Offset = cursor,
+				Size = length
 			};
 
-			// todo: if input stream is seekable, calculate new _cursor to allow other threads write new data,
 			// todo: write nonseekable input stream to separate queue and join it when finish
 			var buffer = new byte[_readBufferSize];
-			var count = data.Read(buffer, 0, _readBufferSize);
+			var count = input.Read(buffer, 0, _readBufferSize);
 			var prevCount = count;
 			var prevBuffer = Interlocked.Exchange(ref buffer, new byte[_readBufferSize]);
+
+			using(var writer = _file.CreateViewStream(cursor, length, MemoryMappedFileAccess.Write)) // todo: read by parts
 			using(var hashAlgorithm = MD5.Create()) {
 				do {
-					Write(prevBuffer, prevCount);
+					writer.Write(prevBuffer, 0, prevCount);
 
-					count = data.Read(buffer, 0, _readBufferSize);
+					count = input.Read(buffer, 0, _readBufferSize);
+
 					if(count > 0) {
 						hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
 						prevCount = count;
@@ -59,34 +85,21 @@ namespace Zylab.Interview.BinStorage.Storage {
 						break;
 					}
 				} while(true);
-				_positionHolder.Write(0, _cursor);
 
 				indexData.Md5Hash = hashAlgorithm.Hash;
 			}
-			indexData.Size = _cursor - indexData.Offset;
 
 			return indexData;
 		}
 
-		public Stream Get(IndexData indexData) {
-			CheckDisposed();
+		private void EnsureCapacity(long count) {
+			lock(_lock) {
+				if(_cursor + count <= _capacity) return;
 
-			if(indexData.Size == 0) {
-				return Stream.Null;
-			}
-
-			return _mappedFile.CreateViewStream(indexData.Offset, indexData.Size);
-		}
-
-		private void Write(byte[] buffer, int count) {
-			if(_cursor + count > _capacity) {
 				ReleaseFile();
 				_capacity <<= 1;
 				InitFile();
 			}
-
-			_writer.Write(buffer, 0, count);
-			_cursor += count;
 		}
 
 		private void InitFile() {
@@ -96,19 +109,18 @@ namespace Zylab.Interview.BinStorage.Storage {
 				_capacity = fileLength;
 			}
 
-			_mappedFile = MemoryMappedFile.CreateFromFile(
+			_file = MemoryMappedFile.CreateFromFile(
 				_storageFilePath,
 				FileMode.OpenOrCreate,
 				null,
 				_capacity,
 				MemoryMappedFileAccess.ReadWrite);
 
-			_positionHolder = _mappedFile.CreateViewAccessor(0, CursorHolderSize);
+			_cursorHolder = _file.CreateViewAccessor(0, CursorHolderSize);
 			if(_cursor == 0) {
 				_cursor = CursorHolderSize;
-				_positionHolder.Write(0, _cursor);
+				_cursorHolder.Write(0, _cursor);
 			}
-			_writer = _mappedFile.CreateViewStream(_cursor, _capacity - _cursor); // todo: read by parts
 		}
 
 		private long ReadPosition(out long fileLength) {
@@ -122,9 +134,9 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		private void ReleaseFile() {
-			_writer.Dispose();
-			_positionHolder.Dispose();
-			_mappedFile.Dispose();
+			_cursorHolder.Write(0, _cursor);
+			_cursorHolder.Dispose();
+			_file.Dispose();
 		}
 
 		#region IDisposable

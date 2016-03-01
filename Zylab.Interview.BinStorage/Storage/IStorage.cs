@@ -5,7 +5,7 @@ using Zylab.Interview.BinStorage.Index;
 namespace Zylab.Interview.BinStorage.Storage {
 
 	public interface IStorage : IDisposable {
-		IndexData Append(Stream data);
+		IndexData Append(Stream input);
 		Stream Get(IndexData indexData);
 	}
 

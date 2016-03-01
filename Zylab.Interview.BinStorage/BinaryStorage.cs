@@ -2,21 +2,26 @@
 using System.IO;
 using Zylab.Interview.BinStorage.Errors;
 using Zylab.Interview.BinStorage.Index;
-using Zylab.Interview.BinStorage.Index.RedBlackTree;
+using Zylab.Interview.BinStorage.Index.BTree;
+using Zylab.Interview.BinStorage.Index.BTree.Persistent;
 using Zylab.Interview.BinStorage.Storage;
 
 namespace Zylab.Interview.BinStorage {
 
 	public class BinaryStorage : IBinaryStorage {
 		private readonly IIndex _index;
+		private readonly PersistentNodeStorage _nodeStorage;
 		private readonly IStorage _storage;
 
 		public BinaryStorage(StorageConfiguration configuration) {
+			var storageFilePath = Path.Combine(configuration.WorkingFolder, configuration.StorageFileName);
+			var indexFilePath = Path.Combine(configuration.WorkingFolder, configuration.IndexFileName);
+
+			_nodeStorage = new PersistentNodeStorage(indexFilePath);
 			_index = new ThreadSafeIndex(
-				new RedBlackTreeIndex(
-					Path.Combine(configuration.WorkingFolder, configuration.IndexFileName)),
+				new BTreeIndex<PersistentNode, KeyInfo>(_nodeStorage),
 				configuration.IndexTimeout);
-			_storage = new FileStorage(Path.Combine(configuration.WorkingFolder, configuration.StorageFileName));
+			_storage = new FileStorage(storageFilePath);
 		}
 
 		public void Add(string key, Stream data) {
@@ -63,8 +68,9 @@ namespace Zylab.Interview.BinStorage {
 			if(_disposed)
 				return;
 
-			_storage.Dispose();
+			_nodeStorage.Dispose();
 			_index.Dispose();
+			_storage.Dispose();
 
 			_disposed = true;
 		}
