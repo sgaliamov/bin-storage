@@ -1,28 +1,19 @@
-﻿using System;
+﻿namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
-namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
-
-	[Serializable]
 	public class PersistentNode {
-		[NonSerialized] private long _offset;
-
-		public long[] Childrens;
-		public int ChildrensCount;
-		public KeyData[] Keys;
-		public int KeysCount;
-
 		public PersistentNode(long offset, int t2) {
 			Childrens = new long[t2];
-			Keys = new KeyData[t2 - 1];
-			_offset = offset;
+			Keys = new KeyInfo[t2 - 1];
+			Offset = offset;
 			ChildrensCount = 0;
 			KeysCount = 0;
 		}
 
-		public long Offset {
-			get { return _offset; }
-			set { _offset = value; }
-		}
+		public long Offset { get; set; }
+		public long[] Childrens { get; set; }
+		public int ChildrensCount { get; set; }
+		public KeyInfo[] Keys { get; set; }
+		public int KeysCount { get; set; }
 	}
 
 }
