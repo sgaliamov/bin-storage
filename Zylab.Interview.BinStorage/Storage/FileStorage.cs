@@ -11,6 +11,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 
 	public class FileStorage : IStorage {
 		private const int DefaultReadBufferSize = Constants.Size4Kb;
+		private const int BigReadBufferSize = Constants.Size16Mb;
 		private const long DefaultCapacity = Constants.Size1Gb;
 		private const int CursorHolderSize = sizeof(long);
 
@@ -69,14 +70,43 @@ namespace Zylab.Interview.BinStorage.Storage {
 			var prevCount = count;
 			var prevBuffer = Interlocked.Exchange(ref buffer, new byte[_readBufferSize]);
 
+			using(var hashAlgorithm = MD5.Create()) {
+				//if(length > BigReadBufferSize) {
+				//	while(cursor < length) {
+				//		Write(input, cursor, BigReadBufferSize, length, buffer, prevBuffer, prevCount, hashAlgorithm);
+				//		cursor += BigReadBufferSize;
+				//	}
+				//	if(cursor > length) {
+				//		var size = cursor - length;
+				//		cursor = BigReadBufferSize - size;
+				//		Write(input, cursor, size, length, buffer, prevBuffer, prevCount, hashAlgorithm);
+				//	}
+				//}
+				//else {
+					Write(input, cursor, length, buffer, prevBuffer, prevCount, hashAlgorithm);
+				//}
+
+				indexData.Md5Hash = hashAlgorithm.Hash;
+			}
+
+			return indexData;
+		}
+
+		private void Write(
+			Stream input,
+			long cursor,
+			long length,
+			byte[] buffer,
+			byte[] prevBuffer,
+			int prevCount,
+			ICryptoTransform hashAlgorithm) {
 			_lock.EnterReadLock();
 			try {
-				using(var writer = _file.CreateViewStream(cursor, length, MemoryMappedFileAccess.Write)) // todo: read by parts
-				using(var hashAlgorithm = MD5.Create()) {
+				using(var writer = _file.CreateViewStream(cursor, length, MemoryMappedFileAccess.Write)) {
 					do {
 						writer.Write(prevBuffer, 0, prevCount);
-
-						count = input.Read(buffer, 0, _readBufferSize);
+						var count = input.Read(buffer, 0, _readBufferSize);
+						cursor += count;
 
 						if(count > 0) {
 							hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
@@ -88,15 +118,11 @@ namespace Zylab.Interview.BinStorage.Storage {
 							break;
 						}
 					} while(true);
-
-					indexData.Md5Hash = hashAlgorithm.Hash;
 				}
 			}
 			finally {
 				_lock.ExitReadLock();
 			}
-
-			return indexData;
 		}
 
 		private void EnsureCapacity(long cursor, long length) {

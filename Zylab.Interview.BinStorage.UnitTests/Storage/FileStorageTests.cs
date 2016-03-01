@@ -108,7 +108,6 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 			}
 		}
 
-		[Ignore] // todo: fix
 		[TestMethod]
 		public void Get_AfterResize_Test() {
 			var data = new[] { Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray() };
