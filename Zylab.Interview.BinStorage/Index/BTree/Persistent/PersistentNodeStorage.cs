@@ -6,34 +6,34 @@ using System.Text;
 namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 	public class PersistentNodeStorage : INodeStorage<PersistentNode, KeyInfo> {
-		private const int DefaultDegre = 1024;
-		private const long DefaultCapacity = 0x400000; // 4 MB		
+		private const int DefaultDegre = 32;
+		private const long DefaultCapacity = Constants.Size4Mb;
 
 		private readonly int _degree2;
-		private readonly MemoryMappedFile _indexFile;
+		private readonly string _indexFilePath;
 		private readonly Sizes _sizes;
+		private long _capacity;
 		private long _cursor;
+		private MemoryMappedFile _indexFile;
 		private PersistentNode _root;
 
 		public PersistentNodeStorage(string indexFilePath, long capacity = DefaultCapacity, int degree = DefaultDegre) {
+			_indexFilePath = indexFilePath;
+			_capacity = capacity;
 			Degree = degree;
 			_degree2 = 2 * degree;
 			_sizes = new Sizes(degree);
 
-			_indexFile = MemoryMappedFile.CreateFromFile(
-				indexFilePath,
-				FileMode.OpenOrCreate,
-				null,
-				capacity,
-				MemoryMappedFileAccess.ReadWrite);
-
-			InitRootAndCursor();
+			InitFile();
 		}
 
 		public void Dispose() {
-			using(var accessor = _indexFile.CreateViewAccessor(0, Sizes.CursorHolderSize + Sizes.RootHolderSize)) {
-				accessor.Write(0, _cursor);
-				accessor.Write(Sizes.RootHolderOffset, _root.Offset);
+			using(var writer = _indexFile.CreateViewAccessor(
+				Sizes.CursorHolderOffset,
+				Sizes.CursorHolderSize + Sizes.RootHolderSize,
+				MemoryMappedFileAccess.Write)) {
+				writer.Write(Sizes.CursorHolderOffset, _cursor);
+				writer.Write(Sizes.RootHolderOffset, _root.Offset);
 			}
 			Commit(_root);
 			_indexFile.Dispose();
@@ -44,7 +44,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void Commit(PersistentNode node) {
-			using(var writer = _indexFile.CreateViewStream(node.Offset, _sizes.NodeSize)) {
+			EnsureCapacity(node.Offset, _sizes.NodeSize);
+			using(var writer = _indexFile.CreateViewStream(node.Offset, _sizes.NodeSize, MemoryMappedFileAccess.Write)) {
 				WriteInt(writer, node.KeysCount);
 				WriteInt(writer, node.ChildrensCount);
 				for(var i = 0; i < node.KeysCount; i++) {
@@ -125,7 +126,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			var newKey = new KeyInfo { Offset = _cursor, Key = key, Size = keyBuffer.Length };
 			var size = Sizes.IndexDataSize + keyBuffer.Length;
 
-			using(var writer = _indexFile.CreateViewStream(_cursor, size)) {
+			EnsureCapacity(_cursor, size);
+			using(var writer = _indexFile.CreateViewStream(_cursor, size, MemoryMappedFileAccess.Write)) {
 				writer.Write(keyBuffer, 0, keyBuffer.Length);
 				WriteIndexData(writer, data);
 			}
@@ -172,6 +174,32 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 		public int Degree { get; }
 
+		private void InitFile() {
+			if(File.Exists(_indexFilePath)) {
+				var length = new FileInfo(_indexFilePath).Length;
+				if(_capacity < length) {
+					_capacity = length;
+				}
+			}
+
+			_indexFile = MemoryMappedFile.CreateFromFile(
+				_indexFilePath,
+				FileMode.OpenOrCreate,
+				null,
+				_capacity,
+				MemoryMappedFileAccess.ReadWrite);
+
+			InitRootAndCursor();
+		}
+
+		private void EnsureCapacity(long cursor, int sizeToWrite) {
+			if(cursor + sizeToWrite <= _capacity) return;
+
+			Dispose();
+			_capacity <<= 1;
+			InitFile();
+		}
+
 		private static void WriteIndexData(Stream writer, IndexData data) {
 			WriteLong(writer, data.Size);
 			WriteLong(writer, data.Offset);
@@ -179,7 +207,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		private IndexData ReadIndexData(KeyInfo keyInfo) {
-			using(var reader = _indexFile.CreateViewStream(keyInfo.Offset + keyInfo.Size, Sizes.IndexDataSize)) {
+			var offset = keyInfo.Offset + keyInfo.Size;
+			using(var reader = _indexFile.CreateViewStream(offset, Sizes.IndexDataSize, MemoryMappedFileAccess.Read)) {
 				var indexData = new IndexData {
 					Md5Hash = new byte[Sizes.Md5HashSize],
 					Size = ReadLong(reader),
@@ -193,7 +222,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 		private PersistentNode ReadNode(long offset) {
 			PersistentNode node;
-			using(var reader = _indexFile.CreateViewStream(offset, _sizes.NodeSize)) {
+			using(var reader = _indexFile.CreateViewStream(offset, _sizes.NodeSize, MemoryMappedFileAccess.Read)) {
 				node = new PersistentNode(offset, _degree2) {
 					KeysCount = ReadInt(reader),
 					ChildrensCount = ReadInt(reader)
@@ -209,7 +238,10 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			}
 
 			for(var i = 0; i < node.KeysCount; i++) {
-				using(var reader = _indexFile.CreateViewAccessor(node.Keys[i].Offset, node.Keys[i].Size)) {
+				using(var reader = _indexFile.CreateViewAccessor(
+					node.Keys[i].Offset,
+					node.Keys[i].Size,
+					MemoryMappedFileAccess.Read)) {
 					node.Keys[i].Key = ReadKey(reader, node.Keys[i].Size);
 				}
 			}
@@ -247,14 +279,17 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		private void InitRootAndCursor() {
-			using(var accessor = _indexFile.CreateViewAccessor(0, Sizes.CursorHolderSize + Sizes.RootHolderSize)) {
-				_cursor = accessor.ReadInt64(0);
+			using(var reader = _indexFile.CreateViewAccessor(
+				Sizes.CursorHolderOffset,
+				Sizes.CursorHolderSize + Sizes.RootHolderSize,
+				MemoryMappedFileAccess.Read)) {
+				_cursor = reader.ReadInt64(0);
 				if(_cursor == 0) {
 					_cursor = Sizes.RootHolderOffset + Sizes.RootHolderOffset;
 					_root = NewNode();
 				}
 				else {
-					var rootOffset = accessor.ReadInt64(Sizes.RootHolderOffset);
+					var rootOffset = reader.ReadInt64(Sizes.RootHolderOffset);
 					_root = ReadNode(rootOffset);
 				}
 			}
