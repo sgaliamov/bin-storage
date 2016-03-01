@@ -7,6 +7,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 	public class FakeStream : Stream {
 		private readonly MemoryMappedFile _file;
 		private long _offset;
+		private long _position;
 
 		public FakeStream(MemoryMappedFile file, long offset, long size) {
 			_offset = offset;
@@ -47,9 +48,20 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		public override int Read(byte[] buffer, int offset, int count) {
-			using(var reader = _file.CreateViewStream(_offset, count - offset, MemoryMappedFileAccess.Read)) {
+			if(_position >= Length) {
+				return 0;
+			}
+
+			var size = (long)(count - offset);
+			var rest = Length - _position;
+			if(rest < size) {
+				size = rest;
+			}
+
+			using(var reader = _file.CreateViewStream(_offset, size, MemoryMappedFileAccess.Read)) {
 				var read = reader.Read(buffer, offset, count);
 				_offset += read;
+				_position += read;
 
 				return read;
 			}
