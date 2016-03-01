@@ -10,7 +10,7 @@ namespace Zylab.Interview.BinStorage.DataGenerator {
 			var count = int.Parse(args[1]);
 			var size = long.Parse(args[2]);
 
-			const int step = 0x6400000;
+			const long step = 0x6400000;
 			var buffer = new byte[Math.Min(size, step)];
 			for(var i = 0; i < buffer.Length; i++) {
 				buffer[i] = 1;
@@ -22,7 +22,7 @@ namespace Zylab.Interview.BinStorage.DataGenerator {
 				.ForAll(
 					_ => {
 						using(var stream = File.Create(path + "\\" + Guid.NewGuid().ToString())) {
-							for(var i = 0; i < size; i += step) {
+							for(long i = 0; i < size; i += step) {
 								stream.Write(buffer, 0, buffer.Length);
 							}
 						}
