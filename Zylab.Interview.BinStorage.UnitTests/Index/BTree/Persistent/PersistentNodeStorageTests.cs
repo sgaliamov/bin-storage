@@ -36,7 +36,18 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 
 		[TestMethod]
 		public void Compare_Test() {
-			Assert.Fail();
+			Process(
+				storage => {
+					var node = storage.NewNode();
+					var indexData = new IndexData { Offset = 0, Size = 0, Md5Hash = Guid.NewGuid().ToByteArray() };
+					storage.InsertKey(node, 0, storage.NewKey("1", indexData));
+					storage.InsertKey(node, 1, storage.NewKey("2", indexData));
+
+					Assert.IsTrue(storage.Compare(node, 0, "2") > 0);
+					Assert.IsTrue(storage.Compare(node, 1, "3") > 0);
+					Assert.IsTrue(storage.Compare(node, 1, "2") == 0);
+					Assert.IsTrue(storage.Compare(node, 1, "1") < 0);
+				});
 		}
 
 		[TestMethod]
