@@ -57,6 +57,7 @@
     <Compile Include="BinaryStorage.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Errors\DuplicateException.cs" />
+    <Compile Include="Errors\NotEnoughDiskSpaceException.cs" />
     <Compile Include="IBinaryStorage.cs" />
     <Compile Include="Index\BTree\BTreeIndex.cs" />
     <Compile Include="Index\BTree\INodeStorage.cs" />

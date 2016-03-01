@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Storage;
@@ -193,7 +194,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 		[TestMethod]
 		public void Parallel_Test() {
 			const int count = 10000;
-			var dictionary = Enumerable.Range(0, count).ToDictionary(x => x, x => Guid.NewGuid().ToByteArray());
+			var dictionary = Enumerable.Range(0, count).ToDictionary(x => x, x => x.ToString("00000"));
 			var indexes = new IndexData[dictionary.Count];
 			const int degreeOfParallelism = 4;
 
@@ -202,8 +203,9 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 					.WithDegreeOfParallelism(degreeOfParallelism)
 					.ForAll(
 						pair => {
+							var bytes = Encoding.UTF8.GetBytes(pair.Value);
 							// ReSharper disable once AccessToDisposedClosure
-							var indexData = target.Append(new MemoryStream(pair.Value));
+							var indexData = target.Append(new MemoryStream(bytes));
 							indexes[pair.Key] = indexData;
 						});
 			}
@@ -220,7 +222,8 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 								stream.CopyTo(ms);
 								var buffer = ms.ToArray();
 
-								Assert.IsTrue(buffer.SequenceEqual(dictionary[i]));
+								var actual = Encoding.UTF8.GetString(buffer);
+								Assert.AreEqual(dictionary[i], actual, "Wrong data");
 							}
 						});
 			}

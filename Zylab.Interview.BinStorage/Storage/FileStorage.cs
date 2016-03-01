@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
+using Zylab.Interview.BinStorage.Errors;
 using Zylab.Interview.BinStorage.Index;
 
 namespace Zylab.Interview.BinStorage.Storage {
@@ -91,14 +93,32 @@ namespace Zylab.Interview.BinStorage.Storage {
 			return indexData;
 		}
 
-		private void EnsureCapacity(long cursor, long count) {
+		private void EnsureCapacity(long cursor, long length) {
 			lock(_lock) {
-				if(cursor + count <= _capacity) return;
+				CheckSpace(cursor, length);
+
+				if(cursor + length <= _capacity) return;
 
 				ReleaseFile();
 				_capacity <<= 1;
 				InitFile();
 			}
+		}
+
+		private void CheckSpace(long cursor, long length) {
+			if(GetFreeSpace() >= cursor + length) return;
+
+			ReleaseFile();
+			throw new NotEnoughDiskSpaceException("There is not enough space on the disk.");
+		}
+
+		private long GetFreeSpace() {
+			var pathRoot = Path.GetPathRoot(_storageFilePath);
+
+			return DriveInfo.GetDrives()
+				.Where(drive => drive.IsReady && string.Equals(drive.Name, pathRoot, StringComparison.InvariantCultureIgnoreCase))
+				.Select(x => x.TotalFreeSpace)
+				.First();
 		}
 
 		private void InitFile() {
