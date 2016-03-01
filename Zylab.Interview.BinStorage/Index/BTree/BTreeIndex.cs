@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Zylab.Interview.BinStorage.Errors;
 
 namespace Zylab.Interview.BinStorage.Index.BTree {
 
@@ -14,6 +15,10 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public void Add(string key, IndexData indexData) {
+			if(Contains(key)) {
+				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
+			}
+
 			var root = _storage.GetRoot();
 			if(!_storage.IsFull(root)) {
 				InsertNonFull(root, key, indexData);

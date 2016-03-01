@@ -10,10 +10,10 @@
 		}
 
 		public long Offset { get; set; }
-		public long[] Childrens { get; set; }
+		public int KeysCount { get; set; }
 		public int ChildrensCount { get; set; }
 		public KeyInfo[] Keys { get; set; }
-		public int KeysCount { get; set; }
+		public long[] Childrens { get; set; }
 	}
 
 }

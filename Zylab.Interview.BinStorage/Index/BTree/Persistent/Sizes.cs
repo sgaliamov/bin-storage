@@ -10,17 +10,17 @@
 		public Sizes(int degree) {
 			var degree2 = degree * 2;
 
-			ChildrensSize = degree2 * sizeof(long);
-			KeysSize = (degree2 - 1) * (sizeof(int) + sizeof(long)); // KeyInfo
-			NodeSize = ChildrensSize + KeysSize;
-			KeysOffset = sizeof(int) + sizeof(int); // PersistentNode.KeysCount + PersistentNode.ChildrensCount
-			ChildrensOffset = KeysSize + KeysOffset;
+			ChildrensSize = degree2 * sizeof(long); // PersistentNode.Childrens: long[]
+			KeysSize = (degree2 - 1) * (sizeof(int) + sizeof(long)); // PersistentNode.Keys: KeyInfo[]
+
+			const int countFieldsSize = sizeof(int) + sizeof(int); // PersistentNode.KeysCount:int + PersistentNode.ChildrensCount:int
+			NodeSize = ChildrensSize + KeysSize + countFieldsSize;
+			ChildrensOffset = KeysSize + countFieldsSize;
 		}
 
 		public int ChildrensSize { get; }
 		public int ChildrensOffset { get; }
 		public int KeysSize { get; }
-		public int KeysOffset { get; }
 		public int NodeSize { get; }
 	}
 
