@@ -8,9 +8,10 @@ namespace Zylab.Interview.BinStorage.DataGenerator {
 		private static void Main(string[] args) {
 			var path = args[0];
 			var count = int.Parse(args[1]);
-			var size = int.Parse(args[2]);
+			var size = long.Parse(args[2]);
 
-			var buffer = new byte[size];
+			const int step = 0x6400000;
+			var buffer = new byte[Math.Min(size, step)];
 			for(var i = 0; i < buffer.Length; i++) {
 				buffer[i] = 1;
 			}
@@ -19,9 +20,11 @@ namespace Zylab.Interview.BinStorage.DataGenerator {
 				.AsParallel()
 				.WithDegreeOfParallelism(4)
 				.ForAll(
-					i => {
+					_ => {
 						using(var stream = File.Create(path + "\\" + Guid.NewGuid().ToString())) {
-							stream.Write(buffer, 0, buffer.Length);
+							for(var i = 0; i < size; i += step) {
+								stream.Write(buffer, 0, buffer.Length);
+							}
 						}
 					});
 		}
