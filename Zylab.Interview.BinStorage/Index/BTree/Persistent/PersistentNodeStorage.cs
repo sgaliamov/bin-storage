@@ -27,23 +27,15 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			InitFile();
 		}
 
-		public void Dispose() {
-			using(var writer = _indexFile.CreateViewAccessor(
-				Sizes.CursorHolderOffset,
-				Sizes.CursorHolderSize + Sizes.RootHolderSize,
-				MemoryMappedFileAccess.Write)) {
-				writer.Write(Sizes.CursorHolderOffset, _cursor);
-				writer.Write(Sizes.RootHolderOffset, _root.Offset);
-			}
-			Commit(_root);
-			_indexFile.Dispose();
-		}
-
 		public void AddChildren(PersistentNode node, PersistentNode children) {
+			CheckDisposed();
+
 			node.Childrens[node.ChildrensCount++] = children.Offset;
 		}
 
 		public void Commit(PersistentNode node) {
+			CheckDisposed();
+
 			EnsureCapacity(node.Offset, _sizes.NodeSize);
 			using(var writer = _indexFile.CreateViewStream(node.Offset, _sizes.NodeSize, MemoryMappedFileAccess.Write)) {
 				WriteInt(writer, node.KeysCount);
@@ -60,24 +52,34 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public int Compare(PersistentNode node, int keyIndex, string key) {
+			CheckDisposed();
+
 			return string.Compare(key, node.Keys[keyIndex].Key, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public PersistentNode GetChildren(PersistentNode node, int position) {
+			CheckDisposed();
+
 			var offset = node.Childrens[position];
 
 			return ReadNode(offset);
 		}
 
 		public KeyInfo GetKey(PersistentNode node, int position) {
+			CheckDisposed();
+
 			return node.Keys[position];
 		}
 
 		public PersistentNode GetRoot() {
+			CheckDisposed();
+
 			return _root;
 		}
 
 		public void InsertChildren(PersistentNode node, int position, PersistentNode children) {
+			CheckDisposed();
+
 			if(position > node.ChildrensCount || position < 0) {
 				throw new ArgumentOutOfRangeException(nameof(position));
 			}
@@ -88,6 +90,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void InsertKey(PersistentNode node, int position, KeyInfo key) {
+			CheckDisposed();
+
 			if(position > node.KeysCount || position < 0) {
 				throw new ArgumentOutOfRangeException(nameof(position));
 			}
@@ -98,14 +102,20 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public bool IsFull(PersistentNode node) {
+			CheckDisposed();
+
 			return node.KeysCount == _degree2 - 1;
 		}
 
 		public bool IsLeaf(PersistentNode node) {
+			CheckDisposed();
+
 			return node.ChildrensCount == 0;
 		}
 
 		public void MoveRightHalfChildrens(PersistentNode newNode, PersistentNode fullNode) {
+			CheckDisposed();
+
 			Array.Copy(fullNode.Childrens, Degree, newNode.Childrens, 0, Degree);
 			newNode.ChildrensCount = Degree;
 
@@ -114,6 +124,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void MoveRightHalfKeys(PersistentNode newNode, PersistentNode fullNode) {
+			CheckDisposed();
+
 			Array.Copy(fullNode.Keys, Degree, newNode.Keys, 0, Degree - 1);
 			newNode.KeysCount = Degree - 1;
 
@@ -122,6 +134,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public KeyInfo NewKey(string key, IndexData data) {
+			CheckDisposed();
+
 			var keyBuffer = Encoding.UTF8.GetBytes(key);
 			var newKey = new KeyInfo { Offset = _cursor, Key = key, Size = keyBuffer.Length };
 			var size = Sizes.IndexDataSize + keyBuffer.Length;
@@ -137,6 +151,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public PersistentNode NewNode() {
+			CheckDisposed();
+
 			var node = new PersistentNode(_cursor, _degree2);
 			_cursor += _sizes.NodeSize;
 
@@ -144,6 +160,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public bool SearchPosition(PersistentNode node, string key, out IndexData found, out int position) {
+			CheckDisposed();
+
 			var lo = 0;
 			var hi = node.KeysCount - 1;
 			while(lo <= hi) {
@@ -169,10 +187,27 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void SetRoot(PersistentNode node) {
+			CheckDisposed();
+
 			_root = node;
 		}
 
 		public int Degree { get; }
+
+		private void ReleaseFile(bool disposeFile = true) {
+			using(var writer = _indexFile.CreateViewAccessor(
+				Sizes.CursorHolderOffset,
+				Sizes.CursorHolderSize + Sizes.RootHolderSize,
+				MemoryMappedFileAccess.Write)) {
+				writer.Write(Sizes.CursorHolderOffset, _cursor);
+				writer.Write(Sizes.RootHolderOffset, _root.Offset);
+			}
+			Commit(_root);
+
+			if(disposeFile) {
+				_indexFile.Dispose();
+			}
+		}
 
 		private void InitFile() {
 			if(File.Exists(_indexFilePath)) {
@@ -195,7 +230,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		private void EnsureCapacity(long cursor, int sizeToWrite) {
 			if(cursor + sizeToWrite <= _capacity) return;
 
-			Dispose();
+			ReleaseFile();
 			_capacity <<= 1;
 			InitFile();
 		}
@@ -294,6 +329,39 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 				}
 			}
 		}
+
+		#region IDisposable
+
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing) {
+			if(_disposed)
+				return;
+
+			if(disposing) {
+				ReleaseFile(false);
+			}
+			_indexFile.Dispose();
+
+			_disposed = true;
+		}
+
+		private bool _disposed;
+
+		private void CheckDisposed() {
+			if(_disposed) {
+				throw new ObjectDisposedException("Node storage is disposed");
+			}
+		}
+
+		~PersistentNodeStorage() {
+			Dispose(false);
+		}
+
+		#endregion
 	}
 
 }

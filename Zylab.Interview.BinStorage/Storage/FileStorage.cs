@@ -15,8 +15,8 @@ namespace Zylab.Interview.BinStorage.Storage {
 		private readonly int _readBufferSize;
 		private readonly string _storageFilePath;
 		private long _capacity;
-		private MemoryMappedFile _mappedFile;
 		private long _cursor;
+		private MemoryMappedFile _mappedFile;
 		private MemoryMappedViewAccessor _positionHolder;
 		private MemoryMappedViewStream _writer;
 
@@ -32,6 +32,8 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		public IndexData Append(Stream data) {
+			CheckDisposed();
+
 			var indexData = new IndexData {
 				Offset = _cursor
 			};
@@ -67,6 +69,8 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		public Stream Get(IndexData indexData) {
+			CheckDisposed();
+
 			if(indexData.Size == 0) {
 				return Stream.Null;
 			}
@@ -74,18 +78,13 @@ namespace Zylab.Interview.BinStorage.Storage {
 			return _mappedFile.CreateViewStream(indexData.Offset, indexData.Size);
 		}
 
-		public void Dispose() {
-			// todo: https://msdn.microsoft.com/en-us/library/system.idisposable(v=vs.110).aspx
-			DisposeFile();
-		}
-
 		private void Write(byte[] buffer, int count) {
 			if(_cursor + count > _capacity) {
-				DisposeFile();
+				ReleaseFile();
 				_capacity <<= 1;
 				InitFile();
 			}
-			
+
 			_writer.Write(buffer, 0, count);
 			_cursor += count;
 		}
@@ -122,11 +121,41 @@ namespace Zylab.Interview.BinStorage.Storage {
 			}
 		}
 
-		private void DisposeFile() {
+		private void ReleaseFile() {
 			_writer.Dispose();
 			_positionHolder.Dispose();
 			_mappedFile.Dispose();
 		}
+
+		#region IDisposable
+
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing) {
+			if(_disposed)
+				return;
+
+			ReleaseFile();
+
+			_disposed = true;
+		}
+
+		private bool _disposed;
+
+		private void CheckDisposed() {
+			if(_disposed) {
+				throw new ObjectDisposedException("Binary storage is disposed");
+			}
+		}
+
+		~FileStorage() {
+			Dispose(false);
+		}
+
+		#endregion
 	}
 
 }

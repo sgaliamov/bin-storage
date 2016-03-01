@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Zylab.Interview.BinStorage.Errors;
 using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Index.RedBlackTree;
@@ -19,29 +20,60 @@ namespace Zylab.Interview.BinStorage {
 		}
 
 		public void Add(string key, Stream data) {
+			CheckDisposed();
+
 			if(_index.Contains(key)) {
 				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
-            }
+			}
 
 			var indexData = _storage.Append(data);
 			_index.Add(key, indexData);
 		}
 
+		public bool Contains(string key) {
+			CheckDisposed();
+
+			return _index.Contains(key);
+		}
+
 		public Stream Get(string key) {
+			CheckDisposed();
+
 			var indexData = _index.Get(key);
 
 			return _storage.Get(indexData);
 		}
 
-		public bool Contains(string key) {
-			return _index.Contains(key);
+		#region IDisposable
+
+		private bool _disposed;
+
+		private void CheckDisposed() {
+			if(_disposed) {
+				throw new ObjectDisposedException("Binary storage is disposed");
+			}
 		}
 
 		public void Dispose() {
-			// todo: https://msdn.microsoft.com/en-us/library/system.idisposable(v=vs.110).aspx
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing) {
+			if(_disposed)
+				return;
+
 			_storage.Dispose();
 			_index.Dispose();
+
+			_disposed = true;
 		}
+
+		~BinaryStorage() {
+			Dispose(false);
+		}
+
+		#endregion
 	}
 
 }

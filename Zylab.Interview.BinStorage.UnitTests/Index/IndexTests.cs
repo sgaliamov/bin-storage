@@ -8,8 +8,6 @@ using Zylab.Interview.BinStorage.Index;
 namespace Zylab.Interview.BinStorage.UnitTests.Index {
 
 	public abstract class IndexTests {
-		protected abstract IIndex Create();
-
 		[TestMethod]
 		public void Add_and_Contains_Test() {
 			var key = Guid.NewGuid().ToString();
@@ -147,6 +145,8 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index {
 				}
 			}
 		}
+
+		protected abstract IIndex Create();
 	}
 
 }

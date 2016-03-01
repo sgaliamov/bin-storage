@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Zylab.Interview.BinStorage.Errors;
@@ -16,26 +17,24 @@ namespace Zylab.Interview.BinStorage.Index.RedBlackTree {
 		}
 
 		public void Add(string key, IndexData data) {
+			CheckDisposed();
+
 			if(_tree.ContainsKey(key)) {
 				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
 			}
 			_tree.Add(key, data);
 		}
 
-		public IndexData Get(string key) {
-			return _tree[key];
-		}
-
 		public bool Contains(string key) {
+			CheckDisposed();
+
 			return _tree.ContainsKey(key);
 		}
 
-		public void Dispose() {
-			// todo: https://msdn.microsoft.com/en-us/library/system.idisposable(v=vs.110).aspx
-			var formatter = new BinaryFormatter();
-			using(var stream = new FileStream(_indexFilePath, FileMode.Create, FileAccess.Write, FileShare.None)) {
-				formatter.Serialize(stream, _tree);
-			}
+		public IndexData Get(string key) {
+			CheckDisposed();
+
+			return _tree[key];
 		}
 
 		private static SortedDictionary<string, IndexData> GetOrCreateTree(string indexFilePath) {
@@ -50,6 +49,45 @@ namespace Zylab.Interview.BinStorage.Index.RedBlackTree {
 
 			return tree ?? new SortedDictionary<string, IndexData>();
 		}
+
+		private void SaveIndex() {
+			var formatter = new BinaryFormatter();
+			using(var stream = new FileStream(_indexFilePath, FileMode.Create, FileAccess.Write, FileShare.None)) {
+				formatter.Serialize(stream, _tree);
+			}
+		}
+
+		#region IDisposable
+
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing) {
+			if(_disposed)
+				return;
+
+			if(disposing) {
+				SaveIndex();
+			}
+
+			_disposed = true;
+		}
+
+		private bool _disposed;
+
+		private void CheckDisposed() {
+			if(_disposed) {
+				throw new ObjectDisposedException("Index is disposed");
+			}
+		}
+
+		~RedBlackTreeIndex() {
+			Dispose(false);
+		}
+
+		#endregion
 	}
 
 }

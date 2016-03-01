@@ -1,20 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Zylab.Interview.BinStorage.Errors;
 
 namespace Zylab.Interview.BinStorage.Index.BTree {
 
 	public class BTreeIndex<TNode, TKey> : IIndex {
-		private readonly INodeStorage<TNode, TKey> _storage;
+		private INodeStorage<TNode, TKey> _storage;
 
 		public BTreeIndex(INodeStorage<TNode, TKey> storage) {
 			_storage = storage;
 		}
 
-		public void Dispose() {
-			_storage.Dispose();
-		}
-
 		public void Add(string key, IndexData indexData) {
+			CheckDisposed();
+
 			if(Contains(key)) {
 				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
 			}
@@ -34,11 +33,15 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public bool Contains(string key) {
+			CheckDisposed();
+
 			IndexData data;
 			return Search(_storage.GetRoot(), key, out data);
 		}
 
 		public IndexData Get(string key) {
+			CheckDisposed();
+
 			IndexData data;
 			if(!Search(_storage.GetRoot(), key, out data)) {
 				throw new KeyNotFoundException($"The given key ({key}) was not present in the dictionary.");
@@ -107,6 +110,38 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 				parent = child;
 			}
 		}
+
+		#region IDisposable
+
+		private void CheckDisposed() {
+			if(_disposed) {
+				throw new ObjectDisposedException("Index is disposed");
+			}
+		}
+
+		private bool _disposed;
+
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing) {
+			if(_disposed)
+				return;
+
+			if(disposing) {
+				_storage = null;
+			}
+
+			_disposed = true;
+		}
+
+		~BTreeIndex() {
+			Dispose(false);
+		}
+
+		#endregion
 	}
 
 }

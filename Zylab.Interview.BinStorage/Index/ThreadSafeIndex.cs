@@ -22,15 +22,15 @@ namespace Zylab.Interview.BinStorage.Index {
 			WriteLock(() => _index.Add(key, indexData), $"Timeout {_timeout} expired to add key {key} to index");
 		}
 
-		public IndexData Get(string key) {
-			return ReadLock(() => _index.Get(key), $"Timeout {_timeout} expired to read index by key {key}");
-		}
-
 		public bool Contains(string key) {
 			return ReadLock(() => _index.Contains(key), $"Timeout {_timeout} expired to read index by key {key}");
 		}
 
-		public void WriteLock(Action action, string errorMessage) {
+		public IndexData Get(string key) {
+			return ReadLock(() => _index.Get(key), $"Timeout {_timeout} expired to read index by key {key}");
+		}
+
+		private void WriteLock(Action action, string errorMessage) {
 			try {
 				if(!_locker.TryEnterWriteLock(_timeout))
 					throw new TimeoutException(errorMessage);
@@ -42,7 +42,7 @@ namespace Zylab.Interview.BinStorage.Index {
 			}
 		}
 
-		public T ReadLock<T>(Func<T> action, string errorMessage) {
+		private T ReadLock<T>(Func<T> action, string errorMessage) {
 			try {
 				if(!_locker.TryEnterWriteLock(_timeout))
 					throw new TimeoutException(errorMessage);
