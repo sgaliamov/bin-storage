@@ -18,13 +18,13 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 			_nodeSize = TestDegree * 2 * sizeof(long) + (TestDegree * 2 - 1) * (sizeof(long) + sizeof(long));
 		}
 
-		private void Test(Action<PersistentNodeStorage> action) {
+		private void Process(Action<PersistentNodeStorage> action) {
 			using(var target = new PersistentNodeStorage(_indexFilePath, 0x400000, TestDegree)) {
 				action(target);
 			}
 		}
 
-		private T Test<T>(Func<PersistentNodeStorage, T> action) {
+		private T Process<T>(Func<PersistentNodeStorage, T> action) {
 			using(var target = new PersistentNodeStorage(_indexFilePath, 0x400000, TestDegree)) {
 				return action(target);
 			}
@@ -42,7 +42,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 
 		[TestMethod]
 		public void AddChildren_Test() {
-			var expected = Test(
+			var expected = Process(
 				storage => {
 					var root = storage.GetRoot();
 					var child1 = storage.NewNode();
@@ -62,7 +62,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 					return child2;
 				});
 
-			var actual = Test(
+			var actual = Process(
 				storage => {
 					var root = storage.GetRoot();
 					return storage.GetChildren(root, 1);
@@ -73,7 +73,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 
 		[TestMethod]
 		public void InsertChildren_Test() {
-			Test(
+			Process(
 				storage => {
 					var node = storage.NewNode();
 					node.ChildrensCount = 2;
@@ -87,7 +87,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 					storage.AddChildren(storage.GetRoot(), node);
 				});
 
-			var actual = Test(
+			var actual = Process(
 				storage => {
 					var root = storage.GetRoot();
 					return storage.GetChildren(root, 0);
@@ -103,7 +103,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 
 		[TestMethod]
 		public void InsertKey_Test() {
-			Test(
+			Process(
 				storage => {
 					var node = storage.NewNode();
 					node.KeysCount = 1;
@@ -116,7 +116,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 					storage.AddChildren(storage.GetRoot(), node);
 				});
 
-			var actual = Test(
+			var actual = Process(
 				storage => {
 					var root = storage.GetRoot();
 					return storage.GetChildren(root, 0);
@@ -131,17 +131,89 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 
 		[TestMethod]
 		public void MoveRightHalfChildrens_Test() {
-			Assert.Fail();
+			Process(
+				storage => {
+					var newNode = storage.NewNode();
+					var fullNode = storage.NewNode();
+					for(var i = 0; i < fullNode.Childrens.Length; i++) {
+						fullNode.Childrens[i] = i + 1;
+					}
+					storage.MoveRightHalfChildrens(newNode, fullNode);
+
+					var root = storage.GetRoot();
+					storage.AddChildren(root, newNode);
+					storage.AddChildren(root, fullNode);
+
+					storage.Commit(root);
+					storage.Commit(newNode);
+					storage.Commit(fullNode);
+				});
+
+			Process(
+				storage => {
+					var root = storage.GetRoot();
+
+					var prevFullNode = storage.GetChildren(root, 1);
+					Assert.AreEqual(TestDegree, prevFullNode.ChildrensCount);
+					for(var i = 0; i < TestDegree; i++) {
+						Assert.AreEqual(i + 1, prevFullNode.Childrens[i]);
+						Assert.AreEqual(0, prevFullNode.Childrens[2 * TestDegree - i - 1]);
+					}
+
+					var prevNewNode = storage.GetChildren(root, 0);
+					Assert.AreEqual(TestDegree, prevNewNode.ChildrensCount);
+					for(var i = 0; i < TestDegree; i++) {
+						Assert.AreEqual(i + TestDegree + 1, prevNewNode.Childrens[i]);
+						Assert.AreEqual(0, prevNewNode.Childrens[2 * TestDegree - i - 1]);
+					}
+				});
 		}
 
 		[TestMethod]
 		public void MoveRightHalfKeys_Test() {
-			Assert.Fail();
-		}
+			Process(
+				storage => {
+					var newNode = storage.NewNode();
+					var fullNode = storage.NewNode();
+					for(var i = 0; i < fullNode.Keys.Length; i++) {
+						fullNode.Keys[i].Size = i + 1;
+						fullNode.Keys[i].Offset = i + 1;
+					}
+					storage.MoveRightHalfKeys(newNode, fullNode);
 
-		[TestMethod]
-		public void NewKey_Test() {
-			Assert.Fail();
+					var root = storage.GetRoot();
+					storage.AddChildren(root, newNode);
+					storage.AddChildren(root, fullNode);
+
+					storage.Commit(root);
+					storage.Commit(newNode);
+					storage.Commit(fullNode);
+				});
+
+			Process(
+				storage => {
+					var root = storage.GetRoot();
+
+					var prevFullNode = storage.GetChildren(root, 1);
+					Assert.AreEqual(TestDegree - 1, prevFullNode.KeysCount);
+					for(var i = 0; i < TestDegree - 1; i++) {
+						Assert.AreEqual(i + 1, prevFullNode.Keys[i].Offset);
+						Assert.AreEqual(i + 1, prevFullNode.Keys[i].Size);
+						Assert.AreEqual(0, prevFullNode.Keys[2 * TestDegree - i - 2].Offset);
+						Assert.AreEqual(0, prevFullNode.Keys[2 * TestDegree - i - 2].Size);
+					}
+					Assert.AreEqual(0, prevFullNode.Keys[TestDegree].Offset);
+					Assert.AreEqual(0, prevFullNode.Keys[TestDegree].Size);
+
+					var prevNewNode = storage.GetChildren(root, 0);
+					Assert.AreEqual(TestDegree - 1, prevNewNode.KeysCount);
+					for(var i = 0; i < TestDegree - 1; i++) {
+						Assert.AreEqual(i + TestDegree + 1, prevNewNode.Keys[i].Offset);
+						Assert.AreEqual(i + TestDegree + 1, prevNewNode.Keys[i].Size);
+						Assert.AreEqual(0, prevNewNode.Keys[2 * TestDegree - i - 2].Offset);
+						Assert.AreEqual(0, prevNewNode.Keys[2 * TestDegree - i - 2].Size);
+					}
+				});
 		}
 
 		[TestMethod]
