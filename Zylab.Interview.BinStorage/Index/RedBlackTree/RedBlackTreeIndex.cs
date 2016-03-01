@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Zylab.Interview.BinStorage.Errors;
 
 namespace Zylab.Interview.BinStorage.Index.RedBlackTree {
 
@@ -15,6 +16,9 @@ namespace Zylab.Interview.BinStorage.Index.RedBlackTree {
 		}
 
 		public void Add(string key, IndexData data) {
+			if(_tree.ContainsKey(key)) {
+				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
+			}
 			_tree.Add(key, data);
 		}
 

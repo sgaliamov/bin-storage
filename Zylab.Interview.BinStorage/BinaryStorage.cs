@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Zylab.Interview.BinStorage.Errors;
 using Zylab.Interview.BinStorage.Index;
 using Zylab.Interview.BinStorage.Index.RedBlackTree;
 using Zylab.Interview.BinStorage.Storage;
@@ -18,6 +19,10 @@ namespace Zylab.Interview.BinStorage {
 		}
 
 		public void Add(string key, Stream data) {
+			if(_index.Contains(key)) {
+				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
+            }
+
 			var indexData = _storage.Append(data);
 			_index.Add(key, indexData);
 		}

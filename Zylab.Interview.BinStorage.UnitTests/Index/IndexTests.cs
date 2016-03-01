@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Zylab.Interview.BinStorage.Errors;
 using Zylab.Interview.BinStorage.Index;
 
 namespace Zylab.Interview.BinStorage.UnitTests.Index {
@@ -56,7 +57,37 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index {
 
 		[TestMethod]
 		public void Add_Duplicate_Test() {
-			Assert.Fail();
+			var key = Guid.NewGuid().ToString();
+			var data = new IndexData {
+				Offset = 1,
+				Size = 2,
+				Md5Hash = Guid.NewGuid().ToByteArray()
+			};
+
+			var newData = new IndexData {
+				Offset = 3,
+				Size = 4,
+				Md5Hash = Guid.NewGuid().ToByteArray()
+			};
+
+			using(var target = Create()) {
+				target.Add(key, data);
+			}
+
+			using(var target = Create()) {
+				try {
+					target.Add(key, newData);
+
+					Assert.Fail("Exception expected");
+				}
+				catch(DuplicateException) {
+				}
+			}
+
+			using(var target = Create()) {
+				var actual = target.Get(key);
+				TestHelper.AreEqual(data, actual);
+			}
 		}
 
 		[TestMethod]

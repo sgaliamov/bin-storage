@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryStorage.cs" />
+    <Compile Include="Errors\DuplicateException.cs" />
     <Compile Include="IBinaryStorage.cs" />
     <Compile Include="Index\BTree\BTreeIndex.cs" />
     <Compile Include="Index\BTree\INodeStorage.cs" />
