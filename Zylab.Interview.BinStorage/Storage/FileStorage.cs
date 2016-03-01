@@ -18,7 +18,6 @@ namespace Zylab.Interview.BinStorage.Storage {
 		private readonly string _storageFilePath;
 		private long _capacity;
 		private long _cursor;
-		private MemoryMappedViewAccessor _cursorHolder;
 		private MemoryMappedFile _file;
 
 		public FileStorage(
@@ -49,13 +48,13 @@ namespace Zylab.Interview.BinStorage.Storage {
 				return Stream.Null;
 			}
 
-			return _file.CreateViewStream(indexData.Offset, indexData.Size);
+			return _file.CreateViewStream(indexData.Offset, indexData.Size, MemoryMappedFileAccess.Read);
 		}
 
 		private IndexData AppendSeekableStream(Stream input) {
 			var length = input.Length;
 			var cursor = Interlocked.Add(ref _cursor, length) - length;
-			EnsureCapacity(length);
+			EnsureCapacity(cursor, length);
 
 			var indexData = new IndexData {
 				Offset = cursor,
@@ -92,9 +91,9 @@ namespace Zylab.Interview.BinStorage.Storage {
 			return indexData;
 		}
 
-		private void EnsureCapacity(long count) {
+		private void EnsureCapacity(long cursor, long count) {
 			lock(_lock) {
-				if(_cursor + count <= _capacity) return;
+				if(cursor + count <= _capacity) return;
 
 				ReleaseFile();
 				_capacity <<= 1;
@@ -103,10 +102,11 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		private void InitFile() {
-			long fileLength;
-			_cursor = ReadPosition(out fileLength);
-			if(_capacity < fileLength) {
-				_capacity = fileLength;
+			if(File.Exists(_storageFilePath)) {
+				var length = new FileInfo(_storageFilePath).Length;
+				if(_capacity < length) {
+					_capacity = length;
+				}
 			}
 
 			_file = MemoryMappedFile.CreateFromFile(
@@ -116,27 +116,22 @@ namespace Zylab.Interview.BinStorage.Storage {
 				_capacity,
 				MemoryMappedFileAccess.ReadWrite);
 
-			_cursorHolder = _file.CreateViewAccessor(0, CursorHolderSize);
+			using(var cursorHolder = _file.CreateViewAccessor(0, CursorHolderSize, MemoryMappedFileAccess.Read)) {
+				_cursor = cursorHolder.ReadInt64(0);
+			}
 			if(_cursor == 0) {
 				_cursor = CursorHolderSize;
-				_cursorHolder.Write(0, _cursor);
 			}
 		}
 
-		private long ReadPosition(out long fileLength) {
-			using(var file = File.Open(_storageFilePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.None)) {
-				var buffer = new byte[CursorHolderSize];
-				file.Read(buffer, 0, CursorHolderSize);
-				fileLength = file.Length;
-
-				return BitConverter.ToInt64(buffer, 0);
+		private void ReleaseFile(bool disposeFile = true) {
+			using(var cursorHolder = _file.CreateViewAccessor(0, CursorHolderSize, MemoryMappedFileAccess.Write)) {
+				cursorHolder.Write(0, _cursor);
 			}
-		}
 
-		private void ReleaseFile() {
-			_cursorHolder.Write(0, _cursor);
-			_cursorHolder.Dispose();
-			_file.Dispose();
+			if(disposeFile) {
+				_file.Dispose();
+			}
 		}
 
 		#region IDisposable
@@ -150,7 +145,10 @@ namespace Zylab.Interview.BinStorage.Storage {
 			if(_disposed)
 				return;
 
-			ReleaseFile();
+			if(disposing) {
+				ReleaseFile(false);
+			}
+			_file.Dispose();
 
 			_disposed = true;
 		}

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -193,35 +192,37 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 
 		[TestMethod]
 		public void Parallel_Test() {
-			var dictionary = Enumerable.Range(0, 10000).ToDictionary(x => x, x => Guid.NewGuid().ToByteArray());
-			var indexes = new ConcurrentDictionary<int, IndexData>();
+			const int count = 10000;
+			var dictionary = Enumerable.Range(0, count).ToDictionary(x => x, x => Guid.NewGuid().ToByteArray());
+			var indexes = new IndexData[dictionary.Count];
 			const int degreeOfParallelism = 4;
 
 			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
 				dictionary.AsParallel()
 					.WithDegreeOfParallelism(degreeOfParallelism)
 					.ForAll(
-					pair => {
-						// ReSharper disable once AccessToDisposedClosure
-						var indexData = target.Append(new MemoryStream(pair.Value));
-						indexes.TryAdd(pair.Key, indexData);
-					});
+						pair => {
+							// ReSharper disable once AccessToDisposedClosure
+							var indexData = target.Append(new MemoryStream(pair.Value));
+							indexes[pair.Key] = indexData;
+						});
 			}
 
 			using(var target = new FileStorage(_storageFilePath, TestCapacity)) {
-				indexes.AsParallel()
+				Enumerable.Range(0, count)
+					.AsParallel()
 					.WithDegreeOfParallelism(degreeOfParallelism)
 					.ForAll(
-					pair => {
-						// ReSharper disable once AccessToDisposedClosure
-						using(var stream = target.Get(pair.Value)) {
-							var ms = new MemoryStream();
-							stream.CopyTo(ms);
-							var buffer = ms.ToArray();
+						i => {
+							// ReSharper disable once AccessToDisposedClosure
+							using(var stream = target.Get(indexes[i])) {
+								var ms = new MemoryStream();
+								stream.CopyTo(ms);
+								var buffer = ms.ToArray();
 
-							Assert.IsTrue(buffer.SequenceEqual(dictionary[pair.Key]));
-						}
-					});
+								Assert.IsTrue(buffer.SequenceEqual(dictionary[i]));
+							}
+						});
 			}
 		}
 
