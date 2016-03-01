@@ -14,8 +14,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 		private const long DefaultCapacity = Constants.Size1Gb;
 		private const int CursorHolderSize = sizeof(long);
 
-		private readonly object _lock = new object();
-
+		private readonly ReaderWriterLockSlim _lock;
 		private readonly int _readBufferSize;
 		private readonly string _storageFilePath;
 		private long _capacity;
@@ -29,6 +28,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 			_storageFilePath = storageFilePath;
 			_readBufferSize = readBufferSize;
 			_capacity = capacity + CursorHolderSize;
+			_lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
 			InitFile();
 		}
@@ -40,6 +40,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 				return AppendSeekableStream(input);
 			}
 
+			// todo: write nonseekable input stream to separate queue and join it when finish
 			throw new NotImplementedException();
 		}
 
@@ -63,45 +64,54 @@ namespace Zylab.Interview.BinStorage.Storage {
 				Size = length
 			};
 
-			// todo: write nonseekable input stream to separate queue and join it when finish
 			var buffer = new byte[_readBufferSize];
 			var count = input.Read(buffer, 0, _readBufferSize);
 			var prevCount = count;
 			var prevBuffer = Interlocked.Exchange(ref buffer, new byte[_readBufferSize]);
 
-			using(var writer = _file.CreateViewStream(cursor, length, MemoryMappedFileAccess.Write)) // todo: read by parts
-			using(var hashAlgorithm = MD5.Create()) {
-				do {
-					writer.Write(prevBuffer, 0, prevCount);
+			_lock.EnterReadLock();
+			try {
+				using(var writer = _file.CreateViewStream(cursor, length, MemoryMappedFileAccess.Write)) // todo: read by parts
+				using(var hashAlgorithm = MD5.Create()) {
+					do {
+						writer.Write(prevBuffer, 0, prevCount);
 
-					count = input.Read(buffer, 0, _readBufferSize);
+						count = input.Read(buffer, 0, _readBufferSize);
 
-					if(count > 0) {
-						hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
-						prevCount = count;
-						prevBuffer = Interlocked.Exchange(ref buffer, prevBuffer);
-					}
-					else {
-						hashAlgorithm.TransformFinalBlock(prevBuffer, 0, prevCount);
-						break;
-					}
-				} while(true);
+						if(count > 0) {
+							hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
+							prevCount = count;
+							prevBuffer = Interlocked.Exchange(ref buffer, prevBuffer);
+						}
+						else {
+							hashAlgorithm.TransformFinalBlock(prevBuffer, 0, prevCount);
+							break;
+						}
+					} while(true);
 
-				indexData.Md5Hash = hashAlgorithm.Hash;
+					indexData.Md5Hash = hashAlgorithm.Hash;
+				}
+			}
+			finally {
+				_lock.ExitReadLock();
 			}
 
 			return indexData;
 		}
 
 		private void EnsureCapacity(long cursor, long length) {
-			lock(_lock) {
-				CheckSpace(cursor, length);
+			try {
+				_lock.EnterWriteLock();
 
+				CheckSpace(cursor, length);
 				if(cursor + length <= _capacity) return;
 
 				ReleaseFile();
 				_capacity <<= 1;
 				InitFile();
+			}
+			finally {
+				_lock.ExitWriteLock();
 			}
 		}
 
