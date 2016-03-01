@@ -55,6 +55,11 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index {
 		}
 
 		[TestMethod]
+		public void Add_Duplicate_Test() {
+			Assert.Fail();
+		}
+
+		[TestMethod]
 		public void Get_Test() {
 			var key = Guid.NewGuid().ToString();
 			var data = new IndexData {

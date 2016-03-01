@@ -1,8 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zylab.Interview.BinStorage.Index.BTree.Persistent;
 
@@ -44,11 +41,12 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 		}
 
 		[TestMethod]
-		public void GetChildren_Test() {
-			Test(
+		public void AddChildren_Test() {
+			var expected = Test(
 				storage => {
 					var root = storage.GetRoot();
 					var child1 = storage.NewNode();
+					storage.Commit(child1);
 					var child2 = storage.NewNode();
 					var child21 = storage.NewNode();
 					var child22 = storage.NewNode();
@@ -60,6 +58,8 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 
 					storage.AddChildren(root, child1);
 					storage.AddChildren(root, child2);
+
+					return child2;
 				});
 
 			var actual = Test(
@@ -67,53 +67,66 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 					var root = storage.GetRoot();
 					return storage.GetChildren(root, 1);
 				});
+
+			Check(expected, actual);
 		}
 
 		[TestMethod]
 		public void InsertChildren_Test() {
-			var node = new PersistentNode(100, TestDegree) {
-				KeysCount = 1,
-				ChildrensCount = 2,
-				Keys = { [1] = new KeyInfo { Offset = 3, Size = 4 } },
-				Childrens = {
-					[0] = 5,
-					[1] = 6
-				}
-			};
-
 			Test(
 				storage => {
-					storage.NewNode();
-					storage.InsertChildren(node, 1, new PersistentNode(7, TestDegree));
-					storage.InsertChildren(node, 3, new PersistentNode(8, TestDegree));
+					var node = storage.NewNode();
+					node.ChildrensCount = 2;
+					node.Childrens[0] = 5;
+					node.Childrens[1] = 6;
+					storage.InsertChildren(node, 0, new PersistentNode(7, TestDegree));
+					storage.InsertChildren(node, 1, new PersistentNode(8, TestDegree));
+					storage.InsertChildren(node, 3, new PersistentNode(9, TestDegree));
+					storage.Commit(node);
+
+					storage.AddChildren(storage.GetRoot(), node);
 				});
 
-			Assert.AreEqual(4, node.ChildrensCount);
-			Assert.AreEqual(7, node.Childrens[1]);
-			Assert.AreEqual(8, node.Childrens[3]);
+			var actual = Test(
+				storage => {
+					var root = storage.GetRoot();
+					return storage.GetChildren(root, 0);
+				});
+
+			Assert.AreEqual(5, actual.ChildrensCount);
+			Assert.AreEqual(7, actual.Childrens[0]);
+			Assert.AreEqual(8, actual.Childrens[1]);
+			Assert.AreEqual(5, actual.Childrens[2]);
+			Assert.AreEqual(9, actual.Childrens[3]);
+			Assert.AreEqual(6, actual.Childrens[4]);
 		}
 
 		[TestMethod]
 		public void InsertKey_Test() {
-			var node = new PersistentNode(100, TestDegree) {
-				KeysCount = 1,
-				ChildrensCount = 2,
-				Keys = { [1] = new KeyInfo { Offset = 3, Size = 4 } },
-				Childrens = {
-					[0] = 5,
-					[1] = 6
-				}
-			};
-
 			Test(
 				storage => {
-					storage.InsertKey(node, 0, new KeyInfo { Size = 7 });
-					storage.InsertKey(node, 2, new KeyInfo { Size = 8 });
+					var node = storage.NewNode();
+					node.KeysCount = 1;
+					node.Keys[0] = new KeyInfo { Offset = 3 };
+					storage.InsertKey(node, 0, new KeyInfo { Offset = 7 });
+					storage.InsertKey(node, 1, new KeyInfo { Offset = 9 });
+					storage.InsertKey(node, 3, new KeyInfo { Offset = 8 });
+					storage.Commit(node);
+
+					storage.AddChildren(storage.GetRoot(), node);
 				});
 
-			Assert.AreEqual(3, node.Keys);
-			Assert.AreEqual(7, node.Keys[1].Offset);
-			Assert.AreEqual(8, node.Keys[3].Offset);
+			var actual = Test(
+				storage => {
+					var root = storage.GetRoot();
+					return storage.GetChildren(root, 0);
+				});
+
+			Assert.AreEqual(4, actual.KeysCount);
+			Assert.AreEqual(7, actual.Keys[0].Offset);
+			Assert.AreEqual(9, actual.Keys[1].Offset);
+			Assert.AreEqual(3, actual.Keys[2].Offset);
+			Assert.AreEqual(8, actual.Keys[3].Offset);
 		}
 
 		[TestMethod]
@@ -134,6 +147,19 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 		[TestMethod]
 		public void SearchPosition_Test() {
 			Assert.Fail();
+		}
+
+		private static void Check(PersistentNode expected, PersistentNode actual) {
+			Assert.AreEqual(expected.ChildrensCount, actual.ChildrensCount);
+			Assert.AreEqual(expected.KeysCount, actual.KeysCount);
+			Assert.AreEqual(expected.Offset, actual.Offset);
+			for(var i = 0; i < TestDegree * 2; i++) {
+				Assert.AreEqual(expected.Childrens[i], actual.Childrens[i]);
+			}
+			for(var i = 0; i < TestDegree * 2 - 1; i++) {
+				Assert.AreEqual(expected.Keys[i].Offset, actual.Keys[i].Offset);
+				Assert.AreEqual(expected.Keys[i].Size, actual.Keys[i].Size);
+			}
 		}
 	}
 

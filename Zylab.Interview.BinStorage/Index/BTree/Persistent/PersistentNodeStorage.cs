@@ -77,12 +77,20 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void InsertChildren(PersistentNode node, int position, PersistentNode children) {
+			if(position > node.ChildrensCount || position < 0) {
+				throw new ArgumentOutOfRangeException(nameof(position));
+			}
+
 			Array.Copy(node.Childrens, position, node.Childrens, position + 1, node.ChildrensCount - position);
 			node.Childrens[position] = children.Offset;
 			node.ChildrensCount++;
 		}
 
 		public void InsertKey(PersistentNode node, int position, KeyInfo key) {
+			if(position > node.KeysCount || position < 0) {
+				throw new ArgumentOutOfRangeException(nameof(position));
+			}
+
 			Array.Copy(node.Keys, position, node.Keys, position + 1, node.KeysCount - position);
 			node.Keys[position] = key;
 			node.KeysCount++;
@@ -211,7 +219,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 			using(var accessor = _indexFile.CreateViewAccessor(0, Sizes.CursorHolderSize + Sizes.RootHolderSize)) {
 				_cursor = accessor.ReadInt64(0);
 				if(_cursor == 0) {
-					_cursor = Sizes.RootHolderOffset;
+					_cursor = Sizes.RootHolderOffset + Sizes.RootHolderOffset;
 					_root = NewNode();
 				}
 				else {
