@@ -121,15 +121,13 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public KeyInfo NewKey(string key, IndexData data) {
-			var buffer = Encoding.UTF8.GetBytes(key);
-			var newKey = new KeyInfo { Offset = _cursor, Key = key, Size = buffer.Length };
-			var size = Sizes.IndexDataSize + buffer.Length;
+			var keyBuffer = Encoding.UTF8.GetBytes(key);
+			var newKey = new KeyInfo { Offset = _cursor, Key = key, Size = keyBuffer.Length };
+			var size = Sizes.IndexDataSize + keyBuffer.Length;
 
 			using(var writer = _indexFile.CreateViewStream(_cursor, size)) {
-				writer.Write(buffer, 0, buffer.Length);
-				writer.Write(data.Md5Hash, 0, Sizes.Md5HashSize);
-				WriteLong(writer, data.Size);
-				WriteLong(writer, data.Offset);
+				writer.Write(keyBuffer, 0, keyBuffer.Length);
+				WriteIndexData(writer, data);
 			}
 
 			_cursor += size;
@@ -152,9 +150,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 				var keyInfo = node.Keys[i];
 				var c = string.Compare(keyInfo.Key, key, StringComparison.OrdinalIgnoreCase);
 				if(c == 0) {
-					using(var reader = _indexFile.CreateViewAccessor(keyInfo.Offset + keyInfo.Size, Sizes.IndexDataSize)) {
-						reader.Read(0, out found);
-					}
+					found = ReadIndexData(keyInfo);
 					position = i;
 					return true;
 				}
@@ -175,6 +171,25 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public int Degree { get; }
+
+		private static void WriteIndexData(Stream writer, IndexData data) {
+			WriteLong(writer, data.Size);
+			WriteLong(writer, data.Offset);
+			writer.Write(data.Md5Hash, 0, Sizes.Md5HashSize);
+		}
+
+		private IndexData ReadIndexData(KeyInfo keyInfo) {
+			using(var reader = _indexFile.CreateViewStream(keyInfo.Offset + keyInfo.Size, Sizes.IndexDataSize)) {
+				var indexData = new IndexData {
+					Md5Hash = new byte[Sizes.Md5HashSize],
+					Size = ReadLong(reader),
+					Offset = ReadLong(reader)
+				};
+				reader.Read(indexData.Md5Hash, 0, Sizes.Md5HashSize);
+
+				return indexData;
+			}
+		}
 
 		private PersistentNode ReadNode(long offset) {
 			PersistentNode node;

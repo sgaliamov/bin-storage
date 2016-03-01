@@ -239,7 +239,33 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 
 		[TestMethod]
 		public void SearchPosition_Test() {
-			Assert.Fail();
+			Process(
+				storage => {
+					var root = storage.GetRoot();
+					var stubData = new IndexData { Offset = 0, Size = 0, Md5Hash = Guid.NewGuid().ToByteArray() };
+					var expectedData = new IndexData { Offset = 1, Size = 1, Md5Hash = Guid.NewGuid().ToByteArray() };
+					storage.InsertKey(root, 0, storage.NewKey("1", stubData));
+					storage.InsertKey(root, 1, storage.NewKey("2", stubData));
+					storage.InsertKey(root, 2, storage.NewKey("3", expectedData));
+					storage.InsertKey(root, 3, storage.NewKey("4", stubData));
+					storage.InsertKey(root, 4, storage.NewKey("5", stubData));
+
+					int position;
+					IndexData actualData;
+					var result = storage.SearchPosition(root, "3", out actualData, out position);
+
+					Assert.IsTrue(result);
+					Assert.AreEqual(2, position);
+					TestHelper.AreEqual(expectedData, actualData);
+
+					result = storage.SearchPosition(root, "0", out actualData, out position);
+					Assert.IsFalse(result);
+					Assert.AreEqual(0, position);
+
+					result = storage.SearchPosition(root, "6", out actualData, out position);
+					Assert.IsFalse(result);
+					Assert.AreEqual(5, position);
+				});
 		}
 
 		private static void Check(PersistentNode expected, PersistentNode actual) {
