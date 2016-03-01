@@ -53,8 +53,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Index\BTree\InMemory\BTreeIndexTests.MultiThreading.cs" />
-    <Compile Include="Index\BTree\InMemory\BTreeIndexTests.cs" />
+    <Compile Include="Index\BTree\InMemory\InMemoryBTreeIndexMultiThreadingTests.MultiThreading.cs" />
+    <Compile Include="Index\BTree\InMemory\InMemoryBTreeIndexTests.cs" />
+    <Compile Include="Index\BTree\Persistent\PersistentBTreeIndexTests.cs" />
+    <Compile Include="Index\BTree\Persistent\PersistentBTreeIndexMultiThreadingTests.MultiThreading.cs" />
     <Compile Include="Index\BTree\Persistent\PersistentNodeStorageTests.cs" />
     <Compile Include="Index\IndexTests.cs" />
     <Compile Include="Index\MultiThreadingTests.cs" />
