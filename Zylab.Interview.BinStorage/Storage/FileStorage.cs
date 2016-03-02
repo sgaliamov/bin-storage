@@ -46,6 +46,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		public IndexData Append(Stream input) {
+			if(input == null) throw new ArgumentNullException(nameof(input));
 			CheckDisposed();
 
 			if(input.CanSeek) {
@@ -57,6 +58,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 		}
 
 		public Stream Get(IndexData indexData) {
+			if(indexData == null) throw new ArgumentNullException(nameof(indexData));
 			CheckDisposed();
 
 			if(indexData.Size == 0) {

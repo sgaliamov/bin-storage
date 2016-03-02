@@ -28,12 +28,15 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void AddChildren(PersistentNode node, PersistentNode children) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
+			if(children == null) throw new ArgumentNullException(nameof(children));
 			CheckDisposed();
 
 			node.Childrens[node.ChildrensCount++] = children.GetOffset();
 		}
 
 		public void Commit(PersistentNode node) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
 			CheckDisposed();
 
 			EnsureCapacity(node.GetOffset(), _sizes.NodeSize);
@@ -56,13 +59,18 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public int Compare(PersistentNode node, int keyIndex, string key) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
+			if(key == null) throw new ArgumentNullException(nameof(key));
 			CheckDisposed();
+			CheckKeyPosition(node, keyIndex);
 
 			return string.Compare(key, node.Keys[keyIndex].GetKey(), StringComparison.OrdinalIgnoreCase);
 		}
 
 		public PersistentNode GetChildren(PersistentNode node, int position) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
 			CheckDisposed();
+			CheckChildPosition(node, position);
 
 			var offset = node.Childrens[position];
 
@@ -70,7 +78,9 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public KeyInfo GetKey(PersistentNode node, int position) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
 			CheckDisposed();
+			CheckKeyPosition(node, position);
 
 			return node.Keys[position];
 		}
@@ -82,11 +92,10 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void InsertChildren(PersistentNode node, int position, PersistentNode children) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
+			if(children == null) throw new ArgumentNullException(nameof(children));
 			CheckDisposed();
-
-			if(position > node.ChildrensCount || position < 0) {
-				throw new ArgumentOutOfRangeException(nameof(position));
-			}
+			CheckChildPosition(node, position);
 
 			Array.Copy(node.Childrens, position, node.Childrens, position + 1, node.ChildrensCount - position);
 			node.Childrens[position] = children.GetOffset();
@@ -94,11 +103,9 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void InsertKey(PersistentNode node, int position, KeyInfo key) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
 			CheckDisposed();
-
-			if(position > node.KeysCount || position < 0) {
-				throw new ArgumentOutOfRangeException(nameof(position));
-			}
+			CheckKeyPosition(node, position);
 
 			Array.Copy(node.Keys, position, node.Keys, position + 1, node.KeysCount - position);
 			node.Keys[position] = key;
@@ -106,18 +113,22 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public bool IsFull(PersistentNode node) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
 			CheckDisposed();
 
 			return node.KeysCount == _maxKeyCount;
 		}
 
 		public bool IsLeaf(PersistentNode node) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
 			CheckDisposed();
 
 			return node.ChildrensCount == 0;
 		}
 
 		public void MoveRightHalfChildrens(PersistentNode newNode, PersistentNode fullNode) {
+			if(newNode == null) throw new ArgumentNullException(nameof(newNode));
+			if(fullNode == null) throw new ArgumentNullException(nameof(fullNode));
 			CheckDisposed();
 
 			Array.Copy(fullNode.Childrens, Degree, newNode.Childrens, 0, Degree);
@@ -128,6 +139,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void MoveRightHalfKeys(PersistentNode newNode, PersistentNode fullNode) {
+			if(newNode == null) throw new ArgumentNullException(nameof(newNode));
+			if(fullNode == null) throw new ArgumentNullException(nameof(fullNode));
 			CheckDisposed();
 
 			Array.Copy(fullNode.Keys, Degree, newNode.Keys, 0, Degree - 1);
@@ -138,6 +151,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public KeyInfo NewKey(string key, IndexData data) {
+			if(key == null) throw new ArgumentNullException(nameof(key));
+			if(data == null) throw new ArgumentNullException(nameof(data));
 			CheckDisposed();
 
 			var keyBuffer = Encoding.UTF8.GetBytes(key);
@@ -166,6 +181,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public bool SearchPosition(PersistentNode node, string key, out IndexData found, out int position) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
+			if(key == null) throw new ArgumentNullException(nameof(key));
 			CheckDisposed();
 
 			var lo = 0;
@@ -194,12 +211,27 @@ namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 		}
 
 		public void SetRoot(PersistentNode node) {
+			if(node == null) throw new ArgumentNullException(nameof(node));
 			CheckDisposed();
 
 			_root = node;
 		}
 
 		public int Degree { get; }
+
+		// ReSharper disable once UnusedParameter.Local
+		private static void CheckChildPosition(PersistentNode node, int position) {
+			if(position > node.ChildrensCount || position < 0) {
+				throw new ArgumentOutOfRangeException(nameof(position));
+			}
+		}
+
+		// ReSharper disable once UnusedParameter.Local
+		private static void CheckKeyPosition(PersistentNode node, int position) {
+			if(position > node.KeysCount || position < 0) {
+				throw new ArgumentOutOfRangeException(nameof(position));
+			}
+		}
 
 		private void ReleaseFile(bool disposeFile = true) {
 			using(var writer = _indexFile.CreateViewAccessor(

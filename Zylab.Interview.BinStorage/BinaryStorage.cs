@@ -25,8 +25,9 @@ namespace Zylab.Interview.BinStorage {
 		}
 
 		public void Add(string key, Stream data) {
+			if(key == null) throw new ArgumentNullException(nameof(key));
+			if(data == null) throw new ArgumentNullException(nameof(data));
 			CheckDisposed();
-
 			if(_index.Contains(key)) {
 				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
 			}
@@ -36,12 +37,14 @@ namespace Zylab.Interview.BinStorage {
 		}
 
 		public bool Contains(string key) {
+			if(key == null) throw new ArgumentNullException(nameof(key));
 			CheckDisposed();
 
 			return _index.Contains(key);
 		}
 
 		public Stream Get(string key) {
+			if(key == null) throw new ArgumentNullException(nameof(key));
 			CheckDisposed();
 
 			var indexData = _index.Get(key);

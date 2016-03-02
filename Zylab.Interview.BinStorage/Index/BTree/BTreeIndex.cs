@@ -17,10 +17,9 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public void Add(string key, IndexData indexData) {
-			CheckDisposed();
-
 			if(key == null) throw new ArgumentNullException(nameof(key));
 			if(indexData == null) throw new ArgumentNullException(nameof(indexData));
+			CheckDisposed();
 			if(Contains(key)) {
 				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
 			}
@@ -40,6 +39,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public bool Contains(string key) {
+			if(key == null) throw new ArgumentNullException(nameof(key));
 			CheckDisposed();
 
 			IndexData data;
@@ -47,6 +47,7 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		}
 
 		public IndexData Get(string key) {
+			if(key == null) throw new ArgumentNullException(nameof(key));
 			CheckDisposed();
 
 			IndexData data;
