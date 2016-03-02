@@ -11,20 +11,28 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 		public void Test() {
 			var filePath = Path.GetTempFileName();
 
-			using(var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, null, Sizes.Size1Kb)) {
-				var stream = new FakeStream(mmf, 100, 23);
-				var buffer = new byte[10];
+			var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, null, Sizes.Size1Kb);
+			var stream = new FakeStream(
+				(dataOffset, dataSize, buffer, offset, count) => {
+					// ReSharper disable once AccessToDisposedClosure
+					using(var reader = mmf.CreateViewStream(dataOffset, dataSize, MemoryMappedFileAccess.Read)) {
+						return reader.Read(buffer, offset, count);
+					}
+				},
+				100,
+				23);
 
-				var read = stream.Read(buffer, 0, 10);
-				Assert.AreEqual(10, read);
-				read = stream.Read(buffer, 0, 10);
-				Assert.AreEqual(10, read);
-				read = stream.Read(buffer, 0, 10);
-				Assert.AreEqual(3, read);
-				read = stream.Read(buffer, 0, 10);
-				Assert.AreEqual(0, read);
-			}
+			var bytes = new byte[10];
+			var read = stream.Read(bytes, 0, 10);
+			Assert.AreEqual(10, read);
+			read = stream.Read(bytes, 0, 10);
+			Assert.AreEqual(10, read);
+			read = stream.Read(bytes, 0, 10);
+			Assert.AreEqual(3, read);
+			read = stream.Read(bytes, 0, 10);
+			Assert.AreEqual(0, read);
 
+			mmf.Dispose();
 			File.Delete(filePath);
 		}
 	}

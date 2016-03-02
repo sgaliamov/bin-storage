@@ -62,6 +62,31 @@ namespace Zylab.Interview.BinStorage.Storage {
 			}
 		}
 
+		public Stream Get(IndexData indexData) {
+			if(indexData == null) throw new ArgumentNullException(nameof(indexData));
+			CheckDisposed();
+
+			if(indexData.Size == 0) {
+				return Stream.Null;
+			}
+
+			return new FakeStream(
+				(dataOffset, dataSize, buffer, offset, count) => {
+					try {
+						_lock.EnterReadLock();
+						using(var reader = _file.CreateViewStream(dataOffset, dataSize, MemoryMappedFileAccess.Read)) {
+							return reader.Read(buffer, offset, count);
+						}
+					}
+					finally {
+						_lock.ExitReadLock();
+					}
+				},
+				indexData.Offset,
+				indexData.Size);
+		}
+
+
 		private IndexData AppendNonSeekableStream(Stream input) {
 			var start = _cursor;
 			var indexData = new IndexData {
@@ -101,23 +126,6 @@ namespace Zylab.Interview.BinStorage.Storage {
 			indexData.Size = _cursor - start;
 
 			return indexData;
-		}
-
-		public Stream Get(IndexData indexData) {
-			if(indexData == null) throw new ArgumentNullException(nameof(indexData));
-			CheckDisposed();
-
-			if(indexData.Size == 0) {
-				return Stream.Null;
-			}
-
-			try {
-				_lock.EnterReadLock();
-				return new FakeStream(_file, indexData.Offset, indexData.Size); // todo: use functor to pass file
-			}
-			finally {
-				_lock.ExitReadLock();
-			}
 		}
 
 		private IndexData AppendSeekableStream(Stream input) {

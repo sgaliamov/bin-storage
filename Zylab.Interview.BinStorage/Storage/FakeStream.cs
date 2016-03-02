@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 
 namespace Zylab.Interview.BinStorage.Storage {
 
@@ -8,19 +7,19 @@ namespace Zylab.Interview.BinStorage.Storage {
 	///     Fake stream to read large files from MemoryMappedFile
 	/// </summary>
 	public class FakeStream : Stream {
-		private readonly MemoryMappedFile _file;
 		private long _offset;
 		private long _position;
+		private readonly Func<long, long, byte[], int, int, int> _read;
 
 		/// <summary>
 		///     Constructor
 		/// </summary>
-		/// <param name="file">Memory mapped file</param>
+		/// <param name="read">Data reader function</param>
 		/// <param name="offset">Data offset</param>
 		/// <param name="size">Data size</param>
-		public FakeStream(MemoryMappedFile file, long offset, long size) {
+		public FakeStream(Func<long, long, byte[], int, int, int> read, long offset, long size) {
+			_read = read;
 			_offset = offset;
-			_file = file;
 
 			Length = size;
 		}
@@ -65,13 +64,11 @@ namespace Zylab.Interview.BinStorage.Storage {
 				size = rest;
 			}
 
-			using(var reader = _file.CreateViewStream(_offset, size, MemoryMappedFileAccess.Read)) {
-				var read = reader.Read(buffer, offset, count);
-				_offset += read;
-				_position += read;
+			var read = _read(_offset, size, buffer, offset, count);
+			_offset += read;
+			_position += read;
 
-				return read;
-			}
+			return read;
 		}
 
 		public override void Write(byte[] buffer, int offset, int count) {
