@@ -53,8 +53,54 @@ namespace Zylab.Interview.BinStorage.Storage {
 				return AppendSeekableStream(input);
 			}
 
-			// todo: write nonseekable input stream to separate queue and join it when finish
-			throw new NotSupportedException();
+			try {
+				_lock.EnterWriteLock();
+				return AppendNonSeekableStream(input);
+			}
+			finally {
+				_lock.ExitWriteLock();
+			}
+		}
+
+		private IndexData AppendNonSeekableStream(Stream input) {
+			var start = _cursor;
+			var indexData = new IndexData {
+				Offset = start
+			};
+
+			var buffer = new byte[_readBufferSize];
+			var count = input.Read(buffer, 0, _readBufferSize);
+			var prevCount = count;
+			var prevBuffer = Interlocked.Exchange(ref buffer, new byte[_readBufferSize]);
+
+			using(var hashAlgorithm = MD5.Create()) {
+				do {
+					if(prevCount > 0) {
+						EnsureCapacity(_cursor, prevCount);
+						using(var writer = _file.CreateViewStream(_cursor, prevCount, MemoryMappedFileAccess.Write)) {
+							writer.Write(prevBuffer, 0, prevCount);
+							_cursor += prevCount;
+						}
+					}
+
+					count = input.Read(buffer, 0, _readBufferSize);
+					if(count > 0) {
+						hashAlgorithm.TransformBlock(prevBuffer, 0, prevCount, null, 0);
+						prevCount = count;
+						prevBuffer = Interlocked.Exchange(ref buffer, prevBuffer);
+					}
+					else {
+						hashAlgorithm.TransformFinalBlock(prevBuffer, 0, prevCount);
+						break;
+					}
+				} while(true);
+
+				indexData.Md5Hash = hashAlgorithm.Hash;
+			}
+
+			indexData.Size = _cursor - start;
+
+			return indexData;
 		}
 
 		public Stream Get(IndexData indexData) {
