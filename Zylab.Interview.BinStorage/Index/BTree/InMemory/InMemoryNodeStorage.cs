@@ -2,13 +2,16 @@
 
 namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
 
+	/// <summary>
+	///     Stores nodes in memory
+	///     All data stored in simple Lists
+	/// </summary>
 	public class InMemoryNodeStorage : INodeStorage<InMemoryNode, IndexDataKey> {
 		private InMemoryNode _root;
 
 		public InMemoryNodeStorage(int degree) {
 			Degree = degree;
 		}
-
 
 		public void AddChildren(InMemoryNode node, InMemoryNode children) {
 			CheckDisposed();

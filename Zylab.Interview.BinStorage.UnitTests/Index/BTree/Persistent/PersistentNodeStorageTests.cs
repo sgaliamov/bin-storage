@@ -134,11 +134,11 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 				});
 
 			Assert.AreEqual(5, actual.KeysCount);
-			Assert.AreEqual("2", actual.Keys[0].Key);
-			Assert.AreEqual("3", actual.Keys[1].Key);
-			Assert.AreEqual("5", actual.Keys[2].Key);
-			Assert.AreEqual("1", actual.Keys[3].Key);
-			Assert.AreEqual("4", actual.Keys[4].Key);
+			Assert.AreEqual("2", actual.Keys[0].GetKey());
+			Assert.AreEqual("3", actual.Keys[1].GetKey());
+			Assert.AreEqual("5", actual.Keys[2].GetKey());
+			Assert.AreEqual("1", actual.Keys[3].GetKey());
+			Assert.AreEqual("4", actual.Keys[4].GetKey());
 		}
 
 		[TestMethod]
@@ -218,11 +218,11 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 						Assert.AreEqual(0, prevFullNode.Keys[2 * TestDegree - i - 2].Offset);
 						Assert.AreEqual(0, prevFullNode.Keys[2 * TestDegree - i - 2].Size);
 
-						keysOffset += Sizes.IndexDataSize + 1;
+						keysOffset += BinStorage.Index.BTree.Persistent.Sizes.IndexDataSize + 1;
 					}
 					Assert.AreEqual(0, prevFullNode.Keys[TestDegree].Offset);
 					Assert.AreEqual(0, prevFullNode.Keys[TestDegree].Size);
-					keysOffset += Sizes.IndexDataSize + 1;
+					keysOffset += BinStorage.Index.BTree.Persistent.Sizes.IndexDataSize + 1;
 
 					var prevNewNode = storage.GetChildren(root, 0);
 					Assert.AreEqual(TestDegree - 1, prevNewNode.KeysCount);
@@ -232,7 +232,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 						Assert.AreEqual(0, prevNewNode.Keys[2 * TestDegree - i - 2].Offset);
 						Assert.AreEqual(0, prevNewNode.Keys[2 * TestDegree - i - 2].Size);
 
-						keysOffset += Sizes.IndexDataSize + 1;
+						keysOffset += BinStorage.Index.BTree.Persistent.Sizes.IndexDataSize + 1;
 					}
 				});
 		}
@@ -270,8 +270,8 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 
 		[TestMethod]
 		public void Capacity_Test() {
-			var sizes = new Sizes(TestDegree);
-			var capacity = 2 * sizes.NodeSize + Sizes.CursorHolderSize + Sizes.RootHolderSize;
+			var sizes = new BinStorage.Index.BTree.Persistent.Sizes(TestDegree);
+			var capacity = 2 * sizes.NodeSize + BinStorage.Index.BTree.Persistent.Sizes.CursorHolderSize + BinStorage.Index.BTree.Persistent.Sizes.RootHolderSize;
 
 			using(var target = new PersistentNodeStorage(_indexFilePath, capacity, TestDegree)) {
 				var root = target.GetRoot();
@@ -289,7 +289,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 		private static void Check(PersistentNode expected, PersistentNode actual) {
 			Assert.AreEqual(expected.ChildrensCount, actual.ChildrensCount);
 			Assert.AreEqual(expected.KeysCount, actual.KeysCount);
-			Assert.AreEqual(expected.Offset, actual.Offset);
+			Assert.AreEqual(expected.GetOffset(), actual.GetOffset());
 			for(var i = 0; i < TestDegree * 2; i++) {
 				Assert.AreEqual(expected.Childrens[i], actual.Childrens[i]);
 			}

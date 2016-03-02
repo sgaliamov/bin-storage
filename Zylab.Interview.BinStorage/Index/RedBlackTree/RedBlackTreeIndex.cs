@@ -6,6 +6,9 @@ using Zylab.Interview.BinStorage.Errors;
 
 namespace Zylab.Interview.BinStorage.Index.RedBlackTree {
 
+	/// <summary>
+	///     Red black tree based on SortedDictionary
+	/// </summary>
 	public class RedBlackTreeIndex : IIndex {
 		private readonly string _indexFilePath;
 		private readonly SortedDictionary<string, IndexData> _tree;

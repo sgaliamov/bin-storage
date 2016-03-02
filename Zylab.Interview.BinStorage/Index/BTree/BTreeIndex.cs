@@ -4,6 +4,11 @@ using Zylab.Interview.BinStorage.Errors;
 
 namespace Zylab.Interview.BinStorage.Index.BTree {
 
+	/// <summary>
+	///     Generic b-tree
+	/// </summary>
+	/// <typeparam name="TNode">Node type</typeparam>
+	/// <typeparam name="TKey">Key type</typeparam>
 	public class BTreeIndex<TNode, TKey> : IIndex {
 		private INodeStorage<TNode, TKey> _storage;
 
@@ -14,6 +19,8 @@ namespace Zylab.Interview.BinStorage.Index.BTree {
 		public void Add(string key, IndexData indexData) {
 			CheckDisposed();
 
+			if(key == null) throw new ArgumentNullException(nameof(key));
+			if(indexData == null) throw new ArgumentNullException(nameof(indexData));
 			if(Contains(key)) {
 				throw new DuplicateException($"An entry with the same key ({key}) already exists.");
 			}

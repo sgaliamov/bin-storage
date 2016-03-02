@@ -55,7 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryStorage.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="Sizes.cs" />
     <Compile Include="Errors\DuplicateException.cs" />
     <Compile Include="Errors\NotEnoughDiskSpaceException.cs" />
     <Compile Include="IBinaryStorage.cs" />

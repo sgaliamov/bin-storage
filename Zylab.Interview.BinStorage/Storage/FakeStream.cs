@@ -4,11 +4,20 @@ using System.IO.MemoryMappedFiles;
 
 namespace Zylab.Interview.BinStorage.Storage {
 
+	/// <summary>
+	///     Fake stream to read large files from MemoryMappedFile
+	/// </summary>
 	public class FakeStream : Stream {
 		private readonly MemoryMappedFile _file;
 		private long _offset;
 		private long _position;
 
+		/// <summary>
+		///     Constructor
+		/// </summary>
+		/// <param name="file">Memory mapped file</param>
+		/// <param name="offset">Data offset</param>
+		/// <param name="size">Data size</param>
 		public FakeStream(MemoryMappedFile file, long offset, long size) {
 			_offset = offset;
 			_file = file;
@@ -16,9 +25,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 			Length = size;
 		}
 
-		public override bool CanRead {
-			get { throw new NotImplementedException(); }
-		}
+		public override bool CanRead => true;
 
 		public override bool CanSeek {
 			get { throw new NotImplementedException(); }

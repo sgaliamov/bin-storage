@@ -11,7 +11,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Storage {
 		public void Test() {
 			var filePath = Path.GetTempFileName();
 
-			using(var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, null, Constants.Size1Kb)) {
+			using(var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, null, Sizes.Size1Kb)) {
 				var stream = new FakeStream(mmf, 100, 23);
 				var buffer = new byte[10];
 

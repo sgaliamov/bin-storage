@@ -3,11 +3,20 @@ using System.Threading;
 
 namespace Zylab.Interview.BinStorage.Index {
 
+	/// <summary>
+	///     Decorator for thread safe operations with index
+	///     Uses ReaderWriterLockSlim in base
+	/// </summary>
 	public class ThreadSafeIndex : IIndex {
 		private readonly IIndex _index;
 		private readonly ReaderWriterLockSlim _locker;
 		private readonly TimeSpan _timeout;
 
+		/// <summary>
+		///     Constructor
+		/// </summary>
+		/// <param name="index">Wrapped index</param>
+		/// <param name="timeout">Lock timeout</param>
 		public ThreadSafeIndex(IIndex index, TimeSpan timeout) {
 			_index = index;
 			_timeout = timeout;

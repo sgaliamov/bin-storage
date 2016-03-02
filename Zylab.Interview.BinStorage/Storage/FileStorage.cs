@@ -9,9 +9,12 @@ using Zylab.Interview.BinStorage.Index;
 
 namespace Zylab.Interview.BinStorage.Storage {
 
+	/// <summary>
+	///     File data storage
+	/// </summary>
 	public class FileStorage : IStorage {
-		private const int DefaultReadBufferSize = Constants.Size4Mb;
-		private const long DefaultCapacity = Constants.Size1Gb;
+		private const int DefaultReadBufferSize = Sizes.Size4Kb;
+		private const long DefaultCapacity = Sizes.Size1Gb;
 		private const int CursorHolderSize = sizeof(long);
 
 		private readonly ReaderWriterLockSlim _lock;
@@ -21,6 +24,15 @@ namespace Zylab.Interview.BinStorage.Storage {
 		private long _cursor;
 		private MemoryMappedFile _file;
 
+		/// <summary>
+		///     Constructor
+		/// </summary>
+		/// <param name="storageFilePath">Path to storage file</param>
+		/// <param name="capacity">
+		///     Initial capacity of the file
+		///     Capacity automatically increased to file size, or twice on overflow
+		/// </param>
+		/// <param name="readBufferSize">Buffer size for reading from append stream</param>
 		public FileStorage(
 			string storageFilePath,
 			long capacity = DefaultCapacity,
@@ -53,7 +65,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 
 			try {
 				_lock.EnterReadLock();
-				return new FakeStream(_file, indexData.Offset, indexData.Size);
+				return new FakeStream(_file, indexData.Offset, indexData.Size); // todo: use functor to pass file
 			}
 			finally {
 				_lock.ExitReadLock();

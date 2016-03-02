@@ -10,7 +10,7 @@ namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
 	[TestClass]
 	public class PersistentBTreeIndexMultiThreadingTests : MultiThreadingTests {
 		private const int TestDegree = 4;
-		private const int TestCapacity = Constants.Size4Kb;
+		private const int TestCapacity = Sizes.Size4Kb;
 		private readonly TimeSpan _timeout = TimeSpan.FromSeconds(10);
 		private string _indexFilePath;
 		private PersistentNodeStorage _nodeStorage;

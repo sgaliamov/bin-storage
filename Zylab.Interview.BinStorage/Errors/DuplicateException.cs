@@ -3,6 +3,9 @@ using System.Runtime.Serialization;
 
 namespace Zylab.Interview.BinStorage.Errors {
 
+	/// <summary>
+	///     Throw when an entry with the same key already exists
+	/// </summary>
 	public class DuplicateException : Exception {
 		public DuplicateException() {
 		}

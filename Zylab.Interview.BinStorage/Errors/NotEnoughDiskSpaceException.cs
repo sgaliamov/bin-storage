@@ -1,9 +1,13 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.Serialization;
 
 namespace Zylab.Interview.BinStorage.Errors {
 
-	public class NotEnoughDiskSpaceException : Exception {
+	/// <summary>
+	///     Throw when there is not enough space on the disk
+	/// </summary>
+	public class NotEnoughDiskSpaceException : IOException {
 		public NotEnoughDiskSpaceException() {
 		}
 
