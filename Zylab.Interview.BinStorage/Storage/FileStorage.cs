@@ -13,7 +13,7 @@ namespace Zylab.Interview.BinStorage.Storage {
 	///     File data storage
 	/// </summary>
 	public class FileStorage : IStorage {
-		private const int DefaultReadBufferSize = Sizes.Size4Kb;
+		private const int DefaultReadBufferSize = Sizes.Size16Kb;
 		private const long DefaultCapacity = Sizes.Size1Gb;
 		private const int CursorHolderSize = sizeof(long);
 

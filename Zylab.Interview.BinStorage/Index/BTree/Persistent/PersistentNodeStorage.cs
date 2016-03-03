@@ -6,8 +6,8 @@ using System.Text;
 namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
 
 	public class PersistentNodeStorage : INodeStorage<PersistentNode, KeyInfo> {
-		private const int DefaultDegre = 32;
-		private const long DefaultCapacity = BinStorage.Sizes.Size4Mb;
+		private const int DefaultDegre = 4;
+		private const long DefaultCapacity = BinStorage.Sizes.Size16Mb;
 
 		private readonly string _indexFilePath;
 		private readonly int _maxKeyCount;
