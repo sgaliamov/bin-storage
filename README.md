@@ -1,6 +1,6 @@
-### Binary Storage
+# Binary Storage
 
-# Introduction
+## Introduction
 
 **Binary Storage** is a write once read many data structure stored on the hard drive. It should provide persistent storage for arbitrary binary content (stream of bytes). When adding new data to the storage client provides a string key that will be associated with this data. Once added to the storage the data cannot be modified through storage API. After data has been successfully added to the storage client could request it for reading by key and it should be returned as a stream of bytes. The storage should be thread-safe and should support multi-threaded addition of new data and reading of existing data. Logical organization of the **Binary Storage** is presented on the picture below:
 
@@ -13,7 +13,7 @@ It consists of two logical parts **Index** and **Storage File.**
 
 The task is to implement the Binary Storage that satisfies requirements listed below and passes acceptance criteria. The solution should be accompanied with a short description and performance measurements.  If any optional requirement is implemented, it should be mentioned in the description. Limitations, important design decisions and usage of 3rd party components should be described.
 
-# Requirements
+### Requirements
 
 | Id | Description |
 | --- | --- |
@@ -27,7 +27,7 @@ The task is to implement the Binary Storage that satisfies requirements listed b
 | 8 | Adding and reading data from the Binary Storage should be thread-safe and multi-threaded. Thread-safe means that many threads might try to add data to the storage at the same time. Multi-threaded means that adding data distributed among 2 or more threads should be generally faster than adding the same data using only one thread. |
 | 9 | It should be possible to check if a given key is present in the Index (_IBinaryStorage.Contains)_ |
 
-# Acceptance Criteria
+### Acceptance Criteria
 
 We will use the test application that will run a number of tests against provided solution. Therefore it is very important to implement API exactly as described in this document.
 
@@ -42,9 +42,9 @@ The decision will be made based on the following criteria:
 - RAM consumed (less for the same performance is better)
 - HDD space consumed for persisting data (less is better)
 
-# Binary Storage implementation details
+## Binary Storage implementation details
 
-**Short description**
+### Short description
 
 The solution consists of two main parts: Index and File Storage. Interaction those two parts is encapsulated in BinaryStorage class.
 
@@ -95,20 +95,14 @@ Next fields have been added to the class StorageConfiguration:
 
 I allowed myself to format code in BinStorage.TestApp.Program and remove unused methods as unformatted code hurts the eyes. .BinStorage.DataGenerator project is used to generate test data. BinStorage.UnitTests project contains unit tests implementations indexes and file storage.
 
-**Measurements**
+### Measurements
 
 Testing was done on a system.
-
 RAM: 6GB.
-
 Processor: Intel Quad CPU Q9450 2.66GHz
-
 Drive: SSD Vertex3 100Gb
-
 For tests, used data from folder RandomData2.
-
 The solution tested with B-Tree degree equals 32, but with different initial storage capacity, reading buffer size, and threads count. First value in table represent creating storage time, second – verification time in the TestApp.
-
 Original storage capacity: 4 GB
 
 | 4 KB read buffer | 16 KB read buffer |
@@ -128,11 +122,7 @@ Original storage capacity: 1 GB
 Testing shows that:
 
 - reinitialization capacity of MemoryMappedFile in FileStorage class does not affect performance much.
-
 - best performance is achieved with 16 KB read buffer.
-
 - increasing buffer size more hurts performance, results are not presented.
-
 - multithreaded running gives 44% performance growth for writing data with 16 KB bufferand 27% in average.
-
 - multithreaded running gives 127% performance growth for reading data with 16 KB bufferand 116 % in average.
