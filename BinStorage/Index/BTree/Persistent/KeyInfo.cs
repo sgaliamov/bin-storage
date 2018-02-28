@@ -1,4 +1,4 @@
-﻿namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
+﻿namespace BinStorage.Index.BTree.Persistent {
 
 	/// <summary>
 	///     Position only of a key in index file

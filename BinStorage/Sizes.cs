@@ -1,4 +1,4 @@
-﻿namespace Zylab.Interview.BinStorage {
+﻿namespace BinStorage {
 
 	public static class Sizes {
 		public const int Size1Kb = 1024;

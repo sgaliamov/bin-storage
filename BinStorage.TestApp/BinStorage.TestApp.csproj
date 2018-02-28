@@ -8,8 +8,8 @@
     <ProjectGuid>{B24D27D5-F06E-4405-8CEF-27380A7FB513}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zylab.Interview.BinStorage.TestApp</RootNamespace>
-    <AssemblyName>Zylab.Interview.BinStorage.TestApp</AssemblyName>
+    <RootNamespace>BinStorage.TestApp</RootNamespace>
+    <AssemblyName>BinStorage.TestApp</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -33,6 +33,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>BinStorage.TestApp.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

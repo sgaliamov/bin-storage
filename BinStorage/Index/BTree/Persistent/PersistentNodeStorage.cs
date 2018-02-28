@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Text;
 
-namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
+namespace BinStorage.Index.BTree.Persistent {
 
 	public class PersistentNodeStorage : INodeStorage<PersistentNode, KeyInfo> {
 		private const int DefaultDegre = 4;

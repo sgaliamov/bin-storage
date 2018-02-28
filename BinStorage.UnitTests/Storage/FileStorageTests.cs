@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using BinStorage.Index;
+using BinStorage.Storage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zylab.Interview.BinStorage.Index;
-using Zylab.Interview.BinStorage.Storage;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Storage {
+namespace BinStorage.UnitTests.Storage {
 
 	[TestClass]
 	public class FileStorageTests {

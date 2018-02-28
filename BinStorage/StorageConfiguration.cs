@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Zylab.Interview.BinStorage {
+namespace BinStorage {
 
 	/// <summary>
 	/// Configuration

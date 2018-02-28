@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Zylab.Interview.BinStorage {
+namespace BinStorage {
 
 	public interface IBinaryStorage : IDisposable {
 		/// <summary>

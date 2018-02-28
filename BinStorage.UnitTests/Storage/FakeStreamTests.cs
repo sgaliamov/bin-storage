@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using System.IO.MemoryMappedFiles;
+using BinStorage.Storage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zylab.Interview.BinStorage.Storage;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Storage {
+namespace BinStorage.UnitTests.Storage {
 
 	[TestClass]
 	public class FakeStreamTests {

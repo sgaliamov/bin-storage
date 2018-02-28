@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Zylab.Interview.BinStorage.Errors {
+namespace BinStorage.Errors {
 
 	/// <summary>
 	///     Throw when an entry with the same key already exists

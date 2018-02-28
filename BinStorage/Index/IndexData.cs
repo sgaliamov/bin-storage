@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Zylab.Interview.BinStorage.Index {
+namespace BinStorage.Index {
 
 	/// <summary>
 	///     Index data

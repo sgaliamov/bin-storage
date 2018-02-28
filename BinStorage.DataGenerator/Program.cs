@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 
-namespace Zylab.Interview.BinStorage.DataGenerator {
+namespace BinStorage.DataGenerator {
 
 	internal class Program {
 		private static void Main(string[] args) {

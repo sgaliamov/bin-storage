@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using Zylab.Interview.BinStorage.Errors;
+using BinStorage.Errors;
 
-namespace Zylab.Interview.BinStorage.Index.RedBlackTree {
+namespace BinStorage.Index.RedBlackTree {
 
 	/// <summary>
 	///     Red black tree based on SortedDictionary

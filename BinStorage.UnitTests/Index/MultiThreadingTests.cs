@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BinStorage.Index;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zylab.Interview.BinStorage.Index;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Index {
+namespace BinStorage.UnitTests.Index {
 
 	public abstract class MultiThreadingTests : IndexTests {
 		[TestMethod]

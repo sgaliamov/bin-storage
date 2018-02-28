@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.Serialization;
 
-namespace Zylab.Interview.BinStorage.Errors {
+namespace BinStorage.Errors {
 
 	/// <summary>
 	///     Throw when there is not enough space on the disk

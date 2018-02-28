@@ -4,10 +4,10 @@ using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
-using Zylab.Interview.BinStorage.Errors;
-using Zylab.Interview.BinStorage.Index;
+using BinStorage.Errors;
+using BinStorage.Index;
 
-namespace Zylab.Interview.BinStorage.Storage {
+namespace BinStorage.Storage {
 
 	/// <summary>
 	///     File data storage

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace Zylab.Interview.BinStorage.Index {
+namespace BinStorage.Index {
 
 	/// <summary>
 	///     Decorator for thread safe operations with index

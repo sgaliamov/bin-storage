@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using Zylab.Interview.BinStorage.Index;
+using BinStorage.Index;
 
-namespace Zylab.Interview.BinStorage.Storage {
+namespace BinStorage.Storage {
 
 	/// <summary>
 	///     Data storage interface

@@ -1,4 +1,4 @@
-﻿namespace Zylab.Interview.BinStorage.Index.BTree.Persistent {
+﻿namespace BinStorage.Index.BTree.Persistent {
 
 	/// <summary>
 	///     B-tree node

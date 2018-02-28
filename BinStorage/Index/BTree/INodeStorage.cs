@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Zylab.Interview.BinStorage.Index.BTree {
+namespace BinStorage.Index.BTree {
 
 	/// <summary>
 	///     Abstract node storage for b-tree

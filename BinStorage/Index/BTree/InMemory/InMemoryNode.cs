@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
+namespace BinStorage.Index.BTree.InMemory {
 
 	/// <summary>
 	///     B-tree node for in memory storage

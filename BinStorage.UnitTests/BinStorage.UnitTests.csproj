@@ -6,8 +6,8 @@
     <ProjectGuid>{3A20A3EE-9F39-4CFD-9C48-E14FF10DAEE8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zylab.Interview.BinStorage.UnitTests</RootNamespace>
-    <AssemblyName>Zylab.Interview.BinStorage.UnitTests</AssemblyName>
+    <RootNamespace>BinStorage.UnitTests</RootNamespace>
+    <AssemblyName>BinStorage.UnitTests</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>

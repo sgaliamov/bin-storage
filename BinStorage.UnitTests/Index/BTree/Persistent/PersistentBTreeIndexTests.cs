@@ -1,10 +1,10 @@
 ﻿using System.IO;
+using BinStorage.Index;
+using BinStorage.Index.BTree;
+using BinStorage.Index.BTree.Persistent;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zylab.Interview.BinStorage.Index;
-using Zylab.Interview.BinStorage.Index.BTree;
-using Zylab.Interview.BinStorage.Index.BTree.Persistent;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.Persistent {
+namespace BinStorage.UnitTests.Index.BTree.Persistent {
 
 	[TestClass]
 	public class PersistentBTreeIndexTests : IndexTests {

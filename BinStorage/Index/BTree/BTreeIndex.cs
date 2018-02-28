@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zylab.Interview.BinStorage.Errors;
+using BinStorage.Errors;
 
-namespace Zylab.Interview.BinStorage.Index.BTree {
+namespace BinStorage.Index.BTree {
 
 	/// <summary>
 	///     Generic b-tree

@@ -4,10 +4,10 @@ using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using BinStorage.Index;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zylab.Interview.BinStorage.Index;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Index {
+namespace BinStorage.UnitTests.Index {
 
 	[TestClass]
 	public class TestHelper {

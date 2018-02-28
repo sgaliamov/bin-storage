@@ -1,9 +1,9 @@
 ﻿using System.IO;
+using BinStorage.Index;
+using BinStorage.Index.RedBlackTree;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zylab.Interview.BinStorage.Index;
-using Zylab.Interview.BinStorage.Index.RedBlackTree;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Index.RedBlackTree {
+namespace BinStorage.UnitTests.Index.RedBlackTree {
 
 	[TestClass]
 	public class RedBlackTreeIndexTests : IndexTests {

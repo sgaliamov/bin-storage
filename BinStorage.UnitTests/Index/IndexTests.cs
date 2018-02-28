@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BinStorage.Errors;
+using BinStorage.Index;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zylab.Interview.BinStorage.Errors;
-using Zylab.Interview.BinStorage.Index;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Index {
+namespace BinStorage.UnitTests.Index {
 
 	public abstract class IndexTests {
 		[TestMethod]

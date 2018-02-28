@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
+namespace BinStorage.Index.BTree.InMemory {
 
 	/// <summary>
 	///     Stores nodes in memory

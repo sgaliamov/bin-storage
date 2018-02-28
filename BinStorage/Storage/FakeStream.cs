@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Zylab.Interview.BinStorage.Storage {
+namespace BinStorage.Storage {
 
 	/// <summary>
 	///     Fake stream to read large files from MemoryMappedFile

@@ -1,4 +1,4 @@
-﻿namespace Zylab.Interview.BinStorage.Index.BTree.InMemory {
+﻿namespace BinStorage.Index.BTree.InMemory {
 
 	/// <summary>
 	///     In memory key info

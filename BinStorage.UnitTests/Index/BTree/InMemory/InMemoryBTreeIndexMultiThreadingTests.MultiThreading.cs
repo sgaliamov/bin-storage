@@ -1,10 +1,10 @@
 ﻿using System;
+using BinStorage.Index;
+using BinStorage.Index.BTree;
+using BinStorage.Index.BTree.InMemory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Zylab.Interview.BinStorage.Index;
-using Zylab.Interview.BinStorage.Index.BTree;
-using Zylab.Interview.BinStorage.Index.BTree.InMemory;
 
-namespace Zylab.Interview.BinStorage.UnitTests.Index.BTree.InMemory {
+namespace BinStorage.UnitTests.Index.BTree.InMemory {
 
 	[TestClass]
 	public class InMemoryBTreeIndexMultiThreadingTests : MultiThreadingTests {

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
-using Zylab.Interview.BinStorage.Errors;
-using Zylab.Interview.BinStorage.Index;
-using Zylab.Interview.BinStorage.Index.BTree;
-using Zylab.Interview.BinStorage.Index.BTree.Persistent;
-using Zylab.Interview.BinStorage.Storage;
+using BinStorage.Errors;
+using BinStorage.Index;
+using BinStorage.Index.BTree;
+using BinStorage.Index.BTree.Persistent;
+using BinStorage.Storage;
 
-namespace Zylab.Interview.BinStorage {
+namespace BinStorage {
 
 	public class BinaryStorage : IBinaryStorage {
 		private readonly IIndex _index;

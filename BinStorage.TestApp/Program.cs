@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace Zylab.Interview.BinStorage.TestApp {
+namespace BinStorage.TestApp {
 
 	internal class Program {
 		private static void Main(string[] args) {

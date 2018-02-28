@@ -8,8 +8,8 @@
     <ProjectGuid>{D4C5F6A9-7989-40EA-8BBC-07B6E0FD8A47}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zylab.Interview.BinStorage</RootNamespace>
-    <AssemblyName>Zylab.Interview.BinStorage</AssemblyName>
+    <RootNamespace>BinStorage</RootNamespace>
+    <AssemblyName>BinStorage</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>

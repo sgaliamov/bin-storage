@@ -7,8 +7,8 @@
     <ProjectGuid>{E32C3E81-8B16-4ED0-BFF1-2386A37CE90B}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zylab.Interview.BinStorage.DataGenerator</RootNamespace>
-    <AssemblyName>Zylab.Interview.BinStorage.DataGenerator</AssemblyName>
+    <RootNamespace>BinStorage.DataGenerator</RootNamespace>
+    <AssemblyName>BinStorage.DataGenerator</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -35,7 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Zylab.Interview.BinStorage.DataGenerator.Program</StartupObject>
+    <StartupObject>BinStorage.DataGenerator.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
