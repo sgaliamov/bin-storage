@@ -68,9 +68,9 @@
     <Compile Include="Storage\FakeStreamTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Zylab.Interview.BinStorage\Zylab.Interview.BinStorage.csproj">
+    <ProjectReference Include="..\BinStorage\BinStorage.csproj">
       <Project>{D4C5F6A9-7989-40EA-8BBC-07B6E0FD8A47}</Project>
-      <Name>Zylab.Interview.BinStorage</Name>
+      <Name>BinStorage</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
